@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<scenario>
+	<snapshot id="0">
+		<node id="v10185-QOP-C"><location x="1.0" y="1.0" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="1.0" y="1.0" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="2.0" y="1.0" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="3.0" y="1.0" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="4.1" y="1.2" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="1.0" y="2.0" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="2.0" y="2.0" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="3.0" y="2.0" z="0" /></node>
+		<node id="v10185-QOP-C"><location x="4.0" y="2.0" z="0" /></node>
+	</snapshot>
+</scenario>

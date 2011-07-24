@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/wisebed/!svn/ver/4281/wiselib/trunk/applications/clustering_test/scripts/include
+END
+authenticate.bsh
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/wisebed/!svn/ver/4281/wiselib/trunk/applications/clustering_test/scripts/include/authenticate.bsh
+END
+reserve_now.bsh
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/wisebed/!svn/ver/4281/wiselib/trunk/applications/clustering_test/scripts/include/reserve_now.bsh
+END
+run_rounds.bsh
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/wisebed/!svn/ver/4281/wiselib/trunk/applications/clustering_test/scripts/include/run_rounds.bsh
+END
+start_controller.bsh
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/wisebed/!svn/ver/4281/wiselib/trunk/applications/clustering_test/scripts/include/start_controller.bsh
+END
+controller.bsh
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/wisebed/!svn/ver/4281/wiselib/trunk/applications/clustering_test/scripts/include/controller.bsh
+END
+get_instance.bsh
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/wisebed/!svn/ver/4281/wiselib/trunk/applications/clustering_test/scripts/include/get_instance.bsh
+END

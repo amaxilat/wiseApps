@@ -1,0 +1,39 @@
+List iSenseNodeURNs = Arrays.asList(new Object[]{
+//TelosB nodes
+//	"urn:wisebed:ctitestbed:0xf042",
+//	"urn:wisebed:ctitestbed:0xfa4b",
+//	"urn:wisebed:ctitestbed:0xd965",
+//	"urn:wisebed:ctitestbed:0x9112",
+//	"urn:wisebed:ctitestbed:0x1ed4"
+//iSense nodes
+//FLOOR 0 
+	"urn:wisebed:ctitestbed:0x1c98",
+	"urn:wisebed:ctitestbed:0x1cde",
+	"urn:wisebed:ctitestbed:0x0cb1",
+	"urn:wisebed:ctitestbed:0x1ccd",
+
+	"urn:wisebed:ctitestbed:0x057b",
+	"urn:wisebed:ctitestbed:0x1b77",
+	"urn:wisebed:ctitestbed:0xa41c",
+	"urn:wisebed:ctitestbed:0x6666",
+	"urn:wisebed:ctitestbed:0x0c9b",
+	"urn:wisebed:ctitestbed:0x1cd0",
+	"urn:wisebed:ctitestbed:0x6699",
+	"urn:wisebed:ctitestbed:0x1bc4",
+	"urn:wisebed:ctitestbed:0x7b99",
+	"urn:wisebed:ctitestbed:0x997b",
+	"urn:wisebed:ctitestbed:0xddba",
+	"urn:wisebed:ctitestbed:0x14e7",
+	"urn:wisebed:ctitestbed:0x1b85",
+	"urn:wisebed:ctitestbed:0x1b8b",
+	"urn:wisebed:ctitestbed:0x153d",
+	"urn:wisebed:ctitestbed:0x1b71"
+//FLOOR 1
+//FLOOR 2
+//	"urn:wisebed:ctitestbed:0x1adb",
+//	"urn:wisebed:ctitestbed:0x1cb7",
+//FLOOR 3
+//	"urn:wisebed:ctitestbed:0x1b86",
+//	"urn:wisebed:ctitestbed:0x1653"
+});
+

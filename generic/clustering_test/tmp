@@ -1,0 +1,21 @@
+[INFO ; shawn.Main::main] ------------------------------------------------------------
+[INFO ; shawn.Main::main] New jshawn instance
+[INFO ; shawn.Main::main] ------------------------------------------------------------
+[INFO ; shawn.ShawnProcessFactory::create] Creating local process shawn instance
+init_apps: init_examples(sc); init_topology(sc); init_reading(sc); init_external_application(sc);
+Initialising examples
+init_topology_elevation
+init_topology_generator
+init_topology_node_gen
+init_topology_node_mod
+init_topology_point_gen
+init_topology_point_mod
+init_topology_topology
+Initialising External_Application  Shawn module
+Initialising Wiselib-Shawn-Standalone module
+init_legacyapps: init_wiselib(sc);
+Initialising Wiselib-Shawn module
+
+
+[INFO ; shawn.ShawnProcess::runCommand] Task done: random_seed
+[INFO ; shawn.ShawnProcess::killProcess] Destroying shawn process.

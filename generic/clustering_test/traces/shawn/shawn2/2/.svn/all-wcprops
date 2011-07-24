@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/wisebed/!svn/ver/4473/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2
+END
+per_k.dat
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/wisebed/!svn/ver/4472/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/per_k.dat
+END
+per_k2.dat
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/wisebed/!svn/ver/4473/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/per_k2.dat
+END
+bidis_1000
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/wisebed/!svn/ver/4472/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/bidis_1000
+END
+bidis_10000
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/wisebed/!svn/ver/4472/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/bidis_10000
+END
+bidis_100000
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/wisebed/!svn/ver/4472/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/bidis_100000
+END
+topology_1000.xml
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/wisebed/!svn/ver/4472/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/topology_1000.xml
+END
+topology_10000.xml
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/wisebed/!svn/ver/4472/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/topology_10000.xml
+END
+topology_100000.xml
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/wisebed/!svn/ver/4472/wiselib/trunk/applications/clustering_test/traces/shawn/shawn2/2/topology_100000.xml
+END

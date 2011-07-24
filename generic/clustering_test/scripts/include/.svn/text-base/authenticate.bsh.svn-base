@@ -1,0 +1,13 @@
+        // build argument types
+        AuthenticationTriple credentials = new AuthenticationTriple();
+        credentials.setUrnPrefix(urnPrefix);
+        credentials.setUsername(username);
+        credentials.setPassword(password);
+        List credentialsList = new ArrayList();
+        credentialsList.add(credentials);
+
+        // do the authentication
+        log.info("Authenticating...");
+        List secretAuthenticationKeys = authenticationSystem.authenticate(credentialsList);
+        log.info("Successfully authenticated!");
+

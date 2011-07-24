@@ -1,0 +1,13 @@
+	//HtmlWriter htmlLogWriter = null;
+	//String htmlLogFile = "log.html";
+
+	//if( htmlLogFile != null ) {
+	//	htmlLogWriter = new HtmlWriter(new FileWriter(new File(htmlLogFile), false));
+	//	jobs.addListener(htmlLogWriter);
+	//}
+
+        MyController control = new MyController();
+
+        DelegatingController delegator = new DelegatingController(control);
+        delegator.publish(localControllerEndpointURL);
+        log.info("Local controller published on url: {}", localControllerEndpointURL);

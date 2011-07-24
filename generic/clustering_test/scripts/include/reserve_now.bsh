@@ -1,0 +1,34 @@
+        //String serializedWiseML = sessionManagement.getNetwork();
+        //List iSenseNodeURNs = WiseMLHelper.getNodeUrns(serializedWiseML, new String[] {});
+        log.info("Used nodes: {}", Arrays.toString(iSenseNodeURNs.toArray()));
+
+        Calendar now = Calendar.getInstance();
+        Date Reservation_Time = new Date(now.getTimeInMillis() + 1000);
+
+        log.info("Time Started "+Reservation_Time.getTime());
+
+        //ClusteringExperiment my_exp = new ClusteringExperiment(Reservation_Time.getTime(),duration,iSenseNodeURNs.size());
+
+        // create reservation request data to reserve all iSense nodes for 10 minutes
+        ConfidentialReservationData reservationData = helper.generateConfidentialReservationData(
+                        iSenseNodeURNs,
+                        Reservation_Time, rounds*duration+1, TimeUnit.MINUTES,
+                        urnPrefix, username
+        );
+
+        // do the reservation
+        log.info("Trying to reserve the following nodes: {}", iSenseNodeURNs);
+    List secretReservationKeys = reservationSystem.makeReservation(
+                helper.copySnaaToRs(secretAuthenticationKeys),
+                reservationData
+    );
+    log.info("Successfully reserved nodes: {}", iSenseNodeURNs);
+
+        // This part is for the command line mode to wait for experiments that have not started yet
+        log.info("Waiting for expiriment to start.");
+        Thread.sleep(2000);
+        while (Reservation_Time.after( new Date() ) ){
+                Thread.sleep(1000);
+                log.info(".");
+                }
+

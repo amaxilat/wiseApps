@@ -1,0 +1,50 @@
+
+                        control.start();
+
+                        // Reset nodes
+                        jobs.submit(new Job("reset nodes", wsn.resetNodes(iSenseNodeURNs), iSenseNodeURNs, Job.JobType.resetNodes));
+                        jobs.join();
+
+                        Thread.sleep(2000);
+
+                        // Send a message to nodes via uart (to receive them enable RX_UART_MSGS in the fronts_config.h-file)
+                        Message msg = new Message();
+                        BinaryMessage bmsg = new BinaryMessage();
+                        bmsg.setBinaryData(new byte[]{0x1,0x1}); //command (1 = hello module) and sub command
+                        bmsg.setBinaryType((byte) 0xa); // the fronts app listens for type 0xa
+                        msg.setBinaryMessage(bmsg);
+                        msg.setSourceNodeId("urn:wisebed:ctitestbed:0xffff");
+                        msg.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar)GregorianCalendar.getInstance()));
+                        jobs.submit(new Job("send", wsn.send(iSenseNodeURNs, msg), iSenseNodeURNs, Job.JobType.send));
+                        jobs.join();
+
+                        for (int i=0; i<rounds; i++)
+                        {
+
+                                if (i>0){
+                                        // Send a message to nodes via uart (to receive them enable RX_UART_MSGS in the fronts_config.h-file)
+                                        Message msg = new Message();
+                                        BinaryMessage bmsg = new BinaryMessage();
+                                        bmsg.setBinaryData(new byte[]{0x1,0x3}); //command (1 = hello module) and sub command
+                                        bmsg.setBinaryType((byte) 0xa); // the fronts app listens for type 0xa
+                                        msg.setBinaryMessage(bmsg);
+                                        msg.setSourceNodeId("urn:wisebed:ctitestbed:0xffff");
+                                        msg.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar)GregorianCalendar.getInstance()));
+                                        jobs.submit(new Job("send", wsn.send(iSenseNodeURNs, msg), iSenseNodeURNs, Job.JobType.send));
+                                        jobs.join();
+                                }
+
+                                long millis = 0 ;
+                                while (millis<(duration*1000*60)){
+                                        Thread.sleep(20000);
+                                        millis += 20000;
+                                        log.debug(millis/1000 + " of total"+((duration*1000*60)/1000)+ " round:" + i);
+                                }
+
+                        }
+                        control.end();
+
+                        // Reset nodes
+                        jobs.submit(new Job("reset nodes", wsn.resetNodes(iSenseNodeURNs), iSenseNodeURNs, Job.JobType.resetNodes));
+                        jobs.join();
+

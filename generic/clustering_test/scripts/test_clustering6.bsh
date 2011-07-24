@@ -1,0 +1,97 @@
+import java.util.*;
+import java.nio.*;
+import java.lang.String;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.lang.System;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import eu.wisebed.testbed.api.rs.RSServiceHelper;
+import eu.wisebed.testbed.api.rs.v1.PublicReservationData;
+import eu.wisebed.testbed.api.rs.v1.RS;
+import eu.wisebed.testbed.api.snaa.v1.SNAA;
+import eu.wisebed.testbed.api.snaa.v1.AuthenticationTriple;
+import eu.wisebed.testbed.api.snaa.v1.SecretAuthenticationKey;
+import eu.wisebed.testbed.api.snaa.helpers.SNAAServiceHelper;
+import eu.wisebed.testbed.api.wsn.WSNServiceHelper;
+import eu.wisebed.testbed.api.wsn.v211.*;
+import de.uniluebeck.itm.tr.util.*;
+import de.itm.uniluebeck.tr.wiseml.WiseMLHelper;
+import de.uniluebeck.itm.wisebed.cmdlineclient.*;
+
+//--------------------------------------------------------------------------
+// Configuration
+//--------------------------------------------------------------------------
+
+	//load setup
+	source("experimentsetup.bsh");
+	//load credentials
+	source("credentials_cti.bsh");
+
+//--------------------------------------------------------------------------
+// Application logic
+//--------------------------------------------------------------------------
+
+	//--------------------------------------------------------------------------
+	// 1st step: authenticate with the system
+	//--------------------------------------------------------------------------
+
+	source("include/authenticate.bsh");
+
+//--------------------------------------------------------------------------
+// 2nd step: reserve some nodes (here: all nodes)
+//--------------------------------------------------------------------------
+    
+    List iSenseNodeURNs = Arrays.asList(new Object[]{						
+		"urn:wisebed:ctitestbed:0xddba",
+		"urn:wisebed:ctitestbed:0x14e7",
+		"urn:wisebed:ctitestbed:0x1b85",		
+		"urn:wisebed:ctitestbed:0x1b8b",
+		"urn:wisebed:ctitestbed:0x153d",
+		"urn:wisebed:ctitestbed:0x1b71"
+		});
+  
+	//make reservation
+	source("include/reserve_now.bsh");
+
+//--------------------------------------------------------------------------
+// 3rd step: start local controller instance
+//--------------------------------------------------------------------------
+	
+	AsyncJobObserver jobs = new AsyncJobObserver(60, TimeUnit.SECONDS); //Timeout for join until unfinished jobs are removed
+
+    source("include/controller.bsh");
+	
+	source("include/start_controller.bsh");
+
+//--------------------------------------------------------------------------
+// 4th step: get WSN API instance URL --> call getInstance() on Session Management service
+//--------------------------------------------------------------------------
+
+	source("include/get_instance.bsh");
+
+//--------------------------------------------------------------------------
+// Steps 5: Flash nodes
+//--------------------------------------------------------------------------
+    log.info("Starting experiments...");
+
+	Thread.sleep(2000);
+    
+		
+//--------------------------------------------------------------------------
+// Steps 6..n: Experiment control using the WSN API
+//--------------------------------------------------------------------------
+
+        source("include/run_rounds.bsh");
+			
+//--------------------------------------------------------------------------
+// Steps n+1: Shutdown WSN API endpoint (optional)
+//--------------------------------------------------------------------------
+   	System.out.println("Done. Please wait to quit...");
+
+	log.info("Done running experiments. Now freeing WSN service instance...");
+	sessionManagement.free(helper.copyRsToWsn(secretReservationKeys));
+	log.info("Freed WSN service instance. Shutting down...");
+	log.info("Please Wait...");
+		
+	System.exit(0);

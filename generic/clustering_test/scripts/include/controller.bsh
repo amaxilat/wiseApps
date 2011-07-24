@@ -1,0 +1,36 @@
+//-------
+        public class MyController implements Controller{
+                HtmlWriter htmlLogWriter;
+                private FileWriter fstream;
+                private BufferedWriter out;
+                private int write_;
+
+                MyController() {
+                        this.htmlLogWriter = htmlLogWriter;
+                        fstream = new FileWriter("trace.out");
+                        out = new BufferedWriter(fstream);
+                        write_=0;
+
+                }
+
+                public void receive(Message msg) {
+
+                        String s = helper.toString(msg);
+                        log.debug("Received message: " + s);
+                        //For the Visualizer
+                        if (write_==1){
+                                out.write(s+"\n");
+                        }
+                }
+                public void start(){
+                        write_=1;
+                }
+                public void end(){
+                        out.close();
+                }
+                public void receiveStatus(RequestStatus status) {
+                        jobs.receive(status);
+                }
+        }
+//-------
+

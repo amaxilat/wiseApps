@@ -1,0 +1,21 @@
+// Do not flash the nodes if you already flashed them before
+boolean flash = false;
+   
+// Number of experiments 
+int rounds = 1;
+// Duration of one experiment
+int duration = 15; // in minutes
+	
+System.out.println("Host is "+ InetAddress.getLocalHost().getCanonicalHostName() );
+		
+// Endpoint URL of local controller instance, the testbed will use this URL to send us node outputs
+String localControllerEndpointURL	= "http://150.140.5.104:8089/controller";
+if ( InetAddress.getLocalHost().getCanonicalHostName().equals("hercules.cti.gr")){
+	System.out.println("Set endpoint to hercules.cti.gr");
+	localControllerEndpointURL	= "http://hercules.cti.gr:8089/controller";
+}
+else if ( InetAddress.getLocalHost().getCanonicalHostName().equals("kandalf")){
+	System.out.println("Set endpoint to qopbot.dyndns.org");
+	localControllerEndpointURL	= "http://qopbot.dyndns.org:8089/controller";
+}
+
