@@ -12,7 +12,7 @@ all: clean isense
 # all: tinyos-tossim
 # all: tinyos-micaz
 
-export APP_SRC=clustering_test_app.cpp
-export BIN_OUT=clustering_test_app
+export APP_SRC=clustering_fronts_app.cpp
+export BIN_OUT=clustering_fronts_app
 
 include ../Makefile
