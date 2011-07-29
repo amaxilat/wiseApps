@@ -6,11 +6,19 @@
 #include "algorithms/neighbor_discovery/echo.h"
 
 #include "algorithms/cluster/clustering_types.h"
+#define MOCA
+#ifdef FRONTS
 #include "algorithms/cluster/fronts/fronts_core.h"
 #include "algorithms/cluster/modules/chd/attr_chd.h"
 #include "algorithms/cluster/modules/it/fronts_it.h"
 #include "algorithms/cluster/modules/jd/bfs_jd.h"
-
+#endif
+#ifdef MOCA
+#include "algorithms/cluster/modules/chd/prob_chd.h"
+#include "algorithms/cluster/modules/jd/moca_jd.h"
+#include "algorithms/cluster/modules/it/overlapping_it.h"
+#include "algorithms/cluster/moca/moca.h"
+#endif
 
 #include "controll_message.h"
 #include "report_message.h"
@@ -45,10 +53,18 @@ typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
+#ifdef FRONTS
 typedef wiselib::AtributeClusterHeadDecision<Os, Radio> CHD_t;
 typedef wiselib::BfsJoinDecision<Os, Radio> JD_t;
 typedef wiselib::FrontsIterator<Os, Radio> IT_t;
 typedef wiselib::FrontsCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
+#endif
+#ifdef MOCA
+typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> CHD_t;
+typedef wiselib::MocaJoinDecision<Os, Radio> JD_t;
+typedef wiselib::OverlappingIterator<Os, Radio> IT_t;
+typedef wiselib::MocaCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
+#endif
 
 typedef Os::Uart::size_t uart_size_t;
 
@@ -84,7 +100,7 @@ public:
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
 #endif
         rand_ = &wiselib::FacetProvider<Os, Os::Rand>::get_facet(value);
-        //        rand_->srand(radio_->id());
+
 
 #ifdef VIRTUAL_RADIO
         radio_ = &virtual_radio_;
@@ -94,6 +110,8 @@ public:
 #else 
         radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
 #endif
+
+        rand_->srand(radio_->id());
 
         radio_->reg_recv_callback<ClusteringFronts, &ClusteringFronts::receive_commands > (this);
 
@@ -126,7 +144,7 @@ public:
         radio_->set_power(power);
 #endif
 
-        radio_->set_channel(18);
+        radio_->set_channel(17);
 
 #ifdef ENABLE_UART_CL
         uart_->reg_read_callback<ClusteringFronts, &ClusteringFronts::handle_uart_msg > (this);
@@ -139,11 +157,15 @@ public:
 
     }
 
-    bool is_gateway() {
-        if (radio_->id() == 0x153d) {
-            return true;
-        }
+    bool is_gateway() {        
         return false;
+    }
+
+    bool is_otap() {
+        switch (radio_->id()) {
+            default:
+                return false;
+        }
     }
 
 
@@ -157,8 +179,8 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 3000, 15000, 160, 180);
-            // set the HeadDecision Module
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 3000, 15000, 160, 200);
+            //             set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
             clustering_algo_.set_join_decision(JD_);
@@ -166,19 +188,23 @@ public:
             clustering_algo_.set_iterator(IT_);
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery);
             clustering_algo_.set_maxhops(2);
+            clustering_algo_.set_probability(30);
 
             debug_->debug("ON");
             neighbor_discovery.enable();
-            clustering_algo_.enable(40);
+            clustering_algo_.enable(20);
 
 #ifdef VISUALIZER
-            //            if (is_gateway()) {
-            //                neighbor_discovery.register_debug_callback(0);
-            //                clustering_algo_.register_debug_callback();
-            //            }
+            if (!is_otap()) {
+                neighbor_discovery.register_debug_callback(0);
+                clustering_algo_.register_debug_callback();
+            }
 #endif
 
         } else {
+            debug_->debug("Node %x Joined %d",radio_->id(),clustering_algo_.clusters_joined());
+            clustering_algo_.present_neighbors();
+
 
             //            if (!is_gateway()) {
             //                if (clustering_algo_.cluster_id() != 0xffff) {
@@ -246,7 +272,7 @@ public:
             if (m->msg_id() == ReportMsg_t::REPORT_MSG) {
                 switch (m->report_type()) {
                     case ReportMsg_t::CLUSTER:
-                        //debug_->debug("Got cluster %x from %x ", m->cluster_id(), src);
+                        debug_->debug("Got cluster %x from %x ", m->cluster_id(), src);
                         if (src == m->cluster_id()) {
                             debug_->debug("CLP;%x;2;%x", src, m->cluster_id());
                         } else {
