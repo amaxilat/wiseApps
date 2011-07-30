@@ -3,7 +3,7 @@
 #####                        Wiselib                                    #####
 #############################################################################
 
-export WISELIB_BASE=/home/amaxilatis/Applications/wiselib
+export WISELIB_BASE=/home/amaxilatis/repositories/wiselib
 export WISELIB_PATH=$(WISELIB_BASE)/wiselib.stable
 export WISELIB_PATH_TESTING=$(WISELIB_BASE)/wiselib.testing
 
@@ -60,6 +60,7 @@ export SHAWN_LINK_LIBS=-rdynamic -lshawnlib -lapps_wiseliblib -lapps_topologylib
 
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/iSense_full
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/iSense
+#export ISENSE_PATH=/home/amaxilatis/sdks/iSenseCD
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/iSense.tiny2
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/iSense.f7
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/tiny

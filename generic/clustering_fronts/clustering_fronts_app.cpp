@@ -6,7 +6,10 @@
 #include "algorithms/neighbor_discovery/echo.h"
 
 #include "algorithms/cluster/clustering_types.h"
-#define MOCA
+
+
+// Replace the first Algorithm name with one from the list in comment
+#define FRONTS //MOCA
 #ifdef FRONTS
 #include "algorithms/cluster/fronts/fronts_core.h"
 #include "algorithms/cluster/modules/chd/attr_chd.h"
@@ -144,7 +147,7 @@ public:
         radio_->set_power(power);
 #endif
 
-        radio_->set_channel(17);
+        radio_->set_channel(18);
 
 #ifdef ENABLE_UART_CL
         uart_->reg_read_callback<ClusteringFronts, &ClusteringFronts::handle_uart_msg > (this);
@@ -157,15 +160,60 @@ public:
 
     }
 
-    bool is_gateway() {        
-        return false;
-    }
+    //    bool is_gateway() {
+    //        switch (radio_->id()) {
+    //            case 0x498:
+    //            case 0x6699:
+    //            case 0xc7a:
+    //            case 0x99ad:
+    //            case 0x1b7f:
+    //                return true;
+    //            default:
+    //                return false;
+    //        }
+    //    }
 
     bool is_otap() {
-        switch (radio_->id()) {
-            default:
-                return false;
-        }
+
+//        if ((radio_->id() == 0x1bbf) ||
+//                (radio_->id() == 0x14e6) ||
+//                (radio_->id() == 0x995a) ||
+//                (radio_->id() == 0x1bc1) ||
+//                (radio_->id() == 0x997a) ||
+//                (radio_->id() == 0x995d) ||
+//                (radio_->id() == 0x152f) ||
+//                (radio_->id() == 0x1538) ||
+//                (radio_->id() == 0x997f) ||
+//                (radio_->id() == 0x997c) ||
+//                (radio_->id() == 0x1b96) ||
+//                (radio_->id() == 0x14d9) ||
+//                (radio_->id() == 0x1b8a) ||
+//                (radio_->id() == 0x9977) ||
+//                (radio_->id() == 0x9978) ||
+//                (radio_->id() == 0x14ea) ||
+//                (radio_->id() == 0x1539) ||
+//                (radio_->id() == 0x997d) ||
+//                (radio_->id() == 0x1c96) ||
+//                (radio_->id() == 0x785c) ||
+//                (radio_->id() == 0x14d4) ||
+//                (radio_->id() == 0x1cd6) ||
+//                (radio_->id() == 0x1bc4) ||
+//                (radio_->id() == 0x1b76) ||
+//                (radio_->id() == 0xdddd) ||
+//                (radio_->id() == 0xcd9) ||
+//                (radio_->id() == 0xca6) ||
+//                (radio_->id() == 0xa41c) ||
+//                (radio_->id() == 0x1b71) ||
+//                (radio_->id() == 0x17a) ||
+//                (radio_->id() == 0xc96) ||
+//                (radio_->id() == 0xca2) ||
+//                (radio_->id() == 0xca8) ||
+//                (radio_->id() == 0x949e) ||
+//                (radio_->id() == 0xddba))
+//            return true;
+//        else
+            return false;
+
     }
 
 
@@ -187,12 +235,16 @@ public:
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery);
+
             clustering_algo_.set_maxhops(2);
+#ifdef MOCA
             clustering_algo_.set_probability(30);
+#endif
 
             debug_->debug("ON");
-            neighbor_discovery.enable();
-            clustering_algo_.enable(20);
+            disabled_ = true;
+            //neighbor_discovery.enable();
+            //clustering_algo_.enable(40);
 
 #ifdef VISUALIZER
             if (!is_otap()) {
@@ -202,8 +254,8 @@ public:
 #endif
 
         } else {
-            debug_->debug("Node %x Joined %d",radio_->id(),clustering_algo_.clusters_joined());
-            clustering_algo_.present_neighbors();
+            //            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
+            //          clustering_algo_.present_neighbors();
 
 
             //            if (!is_gateway()) {
@@ -232,17 +284,15 @@ public:
     void handle_uart_msg(uart_size_t len, Os::Uart::block_data_t *data) {
         //debug_->debug("Got a uart message %x", radio_->id());
 
-
         if (data[0] == 0x2) {
             ControllMsg_t command;
             //if an enable message
-            if (is_gateway()) {
+            if (!is_otap()) {
                 switch (data[1]) {
                     case 0x1:
                         enable();
                         command.set_controll_type(ControllMsg_t::ON);
                         break;
-
                     case 0x2:
                         disable();
                         command.set_controll_type(ControllMsg_t::OFF);
@@ -252,6 +302,7 @@ public:
                         command.set_controll_type(ControllMsg_t::FAIL);
                         break;
                     case 0x4:
+                        recover();
                         command.set_controll_type(ControllMsg_t::RECOVER);
                         break;
                     case 0x5:
@@ -267,7 +318,7 @@ public:
 #endif
 
     void receive_commands(Os::Radio::node_id_t src, Os::Radio::size_t len, Os::Radio::block_data_t * mess) {
-        if (is_gateway()) {
+        if (!is_otap()) {
             ReportMsg_t *m = (ReportMsg_t *) mess;
             if (m->msg_id() == ReportMsg_t::REPORT_MSG) {
                 switch (m->report_type()) {
@@ -327,7 +378,7 @@ public:
     }
 
     void clustering_events(int event) {
-        if (!is_gateway()) {
+        if (is_otap()) {
             ReportMsg_t mess;
             mess.set_msg_id(ReportMsg_t::REPORT_MSG);
             switch (event) {
@@ -367,7 +418,7 @@ public:
 
     void nd_callback(uint8_t event, node_id_t from, uint8_t len, uint8_t * data) {
         if (disabled_) return;
-        if (!is_gateway()) {
+        if (is_otap()) {
             ReportMsg_t mess;
             mess.set_msg_id(ReportMsg_t::REPORT_MSG);
             switch (event) {
@@ -430,11 +481,13 @@ private:
     }
 
     void fail() {
-        if ((*rand_)() % 100 < FAILURES_PERCENTAGE) {
-            debug_->debug("Failing;%x", radio_->id());
-            neighbor_discovery.disable();
-            clustering_algo_.disable();
-            disabled_ = true;
+        if (!disabled_) {
+            if ((*rand_)() % 100 < FAILURES_PERCENTAGE) {
+                debug_->debug("Failing;%x", radio_->id());
+                neighbor_discovery.disable();
+                clustering_algo_.disable();
+                disabled_ = true;
+            }
         }
     }
 
@@ -443,6 +496,7 @@ private:
             debug_->debug("Recovering;%x", radio_->id());
             neighbor_discovery.enable();
             clustering_algo_.enable(40);
+            disabled_=false;
         }
     }
 
