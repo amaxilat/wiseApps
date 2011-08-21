@@ -7,19 +7,12 @@
 
 #include "algorithms/cluster/clustering_types.h"
 
-
 // Replace the first Algorithm name with one from the list in comment
-#define FRONTS //MOCA
+#define FRONTS //FRONTS MOCA
 #ifdef FRONTS
 #include "algorithms/cluster/fronts/fronts_core.h"
-#include "algorithms/cluster/modules/chd/attr_chd.h"
-#include "algorithms/cluster/modules/it/fronts_it.h"
-#include "algorithms/cluster/modules/jd/bfs_jd.h"
 #endif
 #ifdef MOCA
-#include "algorithms/cluster/modules/chd/prob_chd.h"
-#include "algorithms/cluster/modules/jd/moca_jd.h"
-#include "algorithms/cluster/modules/it/overlapping_it.h"
 #include "algorithms/cluster/moca/moca.h"
 #endif
 
@@ -118,8 +111,8 @@ public:
 
         radio_->reg_recv_callback<ClusteringFronts, &ClusteringFronts::receive_commands > (this);
 
-        clustering_algo_.reg_state_changed_callback<ClusteringFronts, &ClusteringFronts::clustering_events > (this);
-        neighbor_discovery.reg_event_callback<ClusteringFronts, &ClusteringFronts::nd_callback > (7, nb_t::NEW_NB | nb_t::NEW_NB_BIDI, this);
+        //clustering_algo_.reg_state_changed_callback<ClusteringFronts, &ClusteringFronts::clustering_events > (this);
+        //neighbor_discovery.reg_event_callback<ClusteringFronts, &ClusteringFronts::nd_callback > (7, nb_t::NEW_NB | nb_t::NEW_NB_BIDI, this);
 
         //radio_->reg_recv_callback<this, &this::receive_commands > (this);
 
@@ -154,7 +147,7 @@ public:
         uart_->enable_serial_comm();
 #endif
 
-        //debug_->debug("BOOT");
+        debug_->debug("********BOOT*********");
 
         timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, 0);
 
@@ -175,44 +168,44 @@ public:
 
     bool is_otap() {
 
-//        if ((radio_->id() == 0x1bbf) ||
-//                (radio_->id() == 0x14e6) ||
-//                (radio_->id() == 0x995a) ||
-//                (radio_->id() == 0x1bc1) ||
-//                (radio_->id() == 0x997a) ||
-//                (radio_->id() == 0x995d) ||
-//                (radio_->id() == 0x152f) ||
-//                (radio_->id() == 0x1538) ||
-//                (radio_->id() == 0x997f) ||
-//                (radio_->id() == 0x997c) ||
-//                (radio_->id() == 0x1b96) ||
-//                (radio_->id() == 0x14d9) ||
-//                (radio_->id() == 0x1b8a) ||
-//                (radio_->id() == 0x9977) ||
-//                (radio_->id() == 0x9978) ||
-//                (radio_->id() == 0x14ea) ||
-//                (radio_->id() == 0x1539) ||
-//                (radio_->id() == 0x997d) ||
-//                (radio_->id() == 0x1c96) ||
-//                (radio_->id() == 0x785c) ||
-//                (radio_->id() == 0x14d4) ||
-//                (radio_->id() == 0x1cd6) ||
-//                (radio_->id() == 0x1bc4) ||
-//                (radio_->id() == 0x1b76) ||
-//                (radio_->id() == 0xdddd) ||
-//                (radio_->id() == 0xcd9) ||
-//                (radio_->id() == 0xca6) ||
-//                (radio_->id() == 0xa41c) ||
-//                (radio_->id() == 0x1b71) ||
-//                (radio_->id() == 0x17a) ||
-//                (radio_->id() == 0xc96) ||
-//                (radio_->id() == 0xca2) ||
-//                (radio_->id() == 0xca8) ||
-//                (radio_->id() == 0x949e) ||
-//                (radio_->id() == 0xddba))
-//            return true;
-//        else
-            return false;
+        //        if ((radio_->id() == 0x1bbf) ||
+        //                (radio_->id() == 0x14e6) ||
+        //                (radio_->id() == 0x995a) ||
+        //                (radio_->id() == 0x1bc1) ||
+        //                (radio_->id() == 0x997a) ||
+        //                (radio_->id() == 0x995d) ||
+        //                (radio_->id() == 0x152f) ||
+        //                (radio_->id() == 0x1538) ||
+        //                (radio_->id() == 0x997f) ||
+        //                (radio_->id() == 0x997c) ||
+        //                (radio_->id() == 0x1b96) ||
+        //                (radio_->id() == 0x14d9) ||
+        //                (radio_->id() == 0x1b8a) ||
+        //                (radio_->id() == 0x9977) ||
+        //                (radio_->id() == 0x9978) ||
+        //                (radio_->id() == 0x14ea) ||
+        //                (radio_->id() == 0x1539) ||
+        //                (radio_->id() == 0x997d) ||
+        //                (radio_->id() == 0x1c96) ||
+        //                (radio_->id() == 0x785c) ||
+        //                (radio_->id() == 0x14d4) ||
+        //                (radio_->id() == 0x1cd6) ||
+        //                (radio_->id() == 0x1bc4) ||
+        //                (radio_->id() == 0x1b76) ||
+        //                (radio_->id() == 0xdddd) ||
+        //                (radio_->id() == 0xcd9) ||
+        //                (radio_->id() == 0xca6) ||
+        //                (radio_->id() == 0xa41c) ||
+        //                (radio_->id() == 0x1b71) ||
+        //                (radio_->id() == 0x17a) ||
+        //                (radio_->id() == 0xc96) ||
+        //                (radio_->id() == 0xca2) ||
+        //                (radio_->id() == 0xca8) ||
+        //                (radio_->id() == 0x949e) ||
+        //                (radio_->id() == 0xddba))
+        //            return true;
+        //        else
+        return false;
 
     }
 
@@ -227,7 +220,7 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 3000, 15000, 160, 200);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 10000, 200, 230);
             //             set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
@@ -236,12 +229,12 @@ public:
             clustering_algo_.set_iterator(IT_);
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery);
 
-            clustering_algo_.set_maxhops(2);
+            clustering_algo_.set_maxhops(3);
 #ifdef MOCA
-            clustering_algo_.set_probability(30);
+            clustering_algo_.set_probability(20);
 #endif
 
-            debug_->debug("ON");
+            //debug_->debug("ON");
             disabled_ = true;
             //neighbor_discovery.enable();
             //clustering_algo_.enable(40);
@@ -249,14 +242,16 @@ public:
 #ifdef VISUALIZER
             if (!is_otap()) {
                 neighbor_discovery.register_debug_callback(0);
-                clustering_algo_.register_debug_callback();
+                //clustering_algo_.register_debug_callback();
             }
 #endif
+            //enable();
 
         } else {
-            //            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
-            //          clustering_algo_.present_neighbors();
-
+//            debug_->debug("NBsize %d", neighbor_discovery.stable_nb_size());
+//            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
+            clustering_algo_.present_neighbors();
+            
 
             //            if (!is_gateway()) {
             //                if (clustering_algo_.cluster_id() != 0xffff) {
@@ -266,6 +261,8 @@ public:
             //                    radio_->send(0xffff, mess.size(), (uint8_t*) & mess);
             //                }
             //            }
+
+
         }
 
 
@@ -274,8 +271,9 @@ public:
         //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
         //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
 
+
         timer_->set_timer<ClusteringFronts,
-                &ClusteringFronts::start > (60000, this, (void *) 1);
+                &ClusteringFronts::start > (10000, this, (void *) 1);
 
     }
 
@@ -466,7 +464,7 @@ private:
         if (disabled_) {
             debug_->debug("ON");
             neighbor_discovery.enable();
-            clustering_algo_.enable(40);
+            clustering_algo_.enable(20);
             disabled_ = false;
         }
     }
@@ -495,8 +493,8 @@ private:
         if (disabled_) {
             debug_->debug("Recovering;%x", radio_->id());
             neighbor_discovery.enable();
-            clustering_algo_.enable(40);
-            disabled_=false;
+            clustering_algo_.enable(20);
+            disabled_ = false;
         }
     }
 
