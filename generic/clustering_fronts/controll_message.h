@@ -87,7 +87,7 @@ namespace wiselib {
         };
 
         inline size_t size() {
-            return 2 * sizeof (uint8) + sizeof (int);
+            return 2 * sizeof (uint8_t) + sizeof (int);
         }
     private:
         block_data_t buffer[Radio::MAX_MESSAGE_LENGTH]; // buffer for the message data

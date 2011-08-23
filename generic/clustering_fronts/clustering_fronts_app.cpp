@@ -8,13 +8,14 @@
 #include "algorithms/cluster/clustering_types.h"
 
 // Replace the first Algorithm name with one from the list in comment
-#define FRONTS //FRONTS MOCA
+#define MOCA //FRONTS MOCA
 #ifdef FRONTS
 #include "algorithms/cluster/fronts/fronts_core.h"
 #endif
 #ifdef MOCA
 #include "algorithms/cluster/moca/moca.h"
 #endif
+
 
 #include "controll_message.h"
 #include "report_message.h"
@@ -34,7 +35,7 @@
 typedef wiselib::OSMODEL Os;
 
 
-#define VIRTUAL_RADIO
+//#define VIRTUAL_RADIO
 #ifdef VIRTUAL_RADIO
 #include "util/wisebed_node_api/virtual_extended_txradio.h"
 #include "util/base_classes/routing_base.h"
@@ -140,14 +141,14 @@ public:
         radio_->set_power(power);
 #endif
 
-        radio_->set_channel(18);
+        //radio_->set_channel(18);
 
 #ifdef ENABLE_UART_CL
         uart_->reg_read_callback<ClusteringFronts, &ClusteringFronts::handle_uart_msg > (this);
         uart_->enable_serial_comm();
 #endif
 
-        debug_->debug("********BOOT*********");
+        debug_->debug("********BOOT%x*********", radio_->id());
 
         timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, 0);
 
@@ -220,8 +221,8 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 10000, 200, 230);
-            //             set the HeadDecision Module
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 10000, 180, 200);
+            // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
             clustering_algo_.set_join_decision(JD_);
@@ -231,7 +232,7 @@ public:
 
             clustering_algo_.set_maxhops(3);
 #ifdef MOCA
-            clustering_algo_.set_probability(20);
+            clustering_algo_.set_probability(40);
 #endif
 
             //debug_->debug("ON");
@@ -245,13 +246,13 @@ public:
                 //clustering_algo_.register_debug_callback();
             }
 #endif
-            //enable();
+            enable();
 
         } else {
-//            debug_->debug("NBsize %d", neighbor_discovery.stable_nb_size());
-//            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
+            //            debug_->debug("NBsize %d", neighbor_discovery.stable_nb_size());
+            //            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
             clustering_algo_.present_neighbors();
-            
+
 
             //            if (!is_gateway()) {
             //                if (clustering_algo_.cluster_id() != 0xffff) {

@@ -99,7 +99,7 @@ namespace wiselib {
         };
 
         inline size_t size() {
-            return 2 * sizeof (uint8) + sizeof (node_id_t);
+            return 2 * sizeof (uint8_t) + sizeof (node_id_t);
         }
     private:
         block_data_t buffer[Radio::MAX_MESSAGE_LENGTH]; // buffer for the message data
