@@ -6,7 +6,8 @@
 #include "algorithms/neighbor_discovery/echo.h"
 
 #include "algorithms/cluster/clustering_types.h"
-#include "algorithms/routing/tree/tree_routing.h"
+#include "internal_interface/routing_table/routing_table_static_array.h"
+#include "algorithms/routing/flooding/flooding_algorithm.h"
 
 
 // Replace the first Algorithm name with one from the list in comment
@@ -45,7 +46,8 @@ typedef Os::TxRadio Radio;
 
 
 
-typedef wiselib::TreeRouting<Os, Os::Radio, Os::Timer, Os::Debug> tree_routing_t;
+typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64> FloodingStaticMap;
+typedef wiselib::FloodingAlgorithm<Os,FloodingStaticMap, Os::TxRadio, Os::Debug> tree_routing_t;
 
 
 typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
@@ -54,10 +56,10 @@ typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
 #ifdef SPIT
-typedef wiselib::FixedClusterHeadDecision<Os, Radio> CHD_t;
-typedef wiselib::SemanticJoinDecision<Os, Radio> JD_t;
-typedef wiselib::OverlappingIterator<Os, Radio> IT_t;
-typedef wiselib::SpitCore<Os, Radio, CHD_t, JD_t, IT_t,nb_t> clustering_algo_t;
+typedef wiselib::SemanticClusterHeadDecision<Os, tree_routing_t> CHD_t;
+typedef wiselib::SemanticJoinDecision<Os, tree_routing_t> JD_t;
+typedef wiselib::OverlappingIterator<Os, tree_routing_t> IT_t;
+typedef wiselib::SpitCore<Os, tree_routing_t, CHD_t, JD_t, IT_t, nb_t> clustering_algo_t;
 #endif
 
 typedef Os::Uart::size_t uart_size_t;
@@ -107,8 +109,10 @@ public:
         radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
 #endif
 
-        routing_.init(*radio_, *timer_, *debug_);
+        radio_->enable_radio();
+        routing_.init(*radio_, *debug_);
         routing_.enable_radio();
+        
 
         rand_->srand(radio_->id());
 
@@ -170,16 +174,17 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 10000, 220, 250);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 10000, 230, 250);
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
             clustering_algo_.set_join_decision(JD_);
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
-            clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery);
+            clustering_algo_.init(routing_, *timer_, *debug_, *rand_, neighbor_discovery);
 
 
+            clustering_algo_.set_demands();
 
             //debug_->debug("ON");
             disabled_ = true;
@@ -188,7 +193,7 @@ public:
 
 #ifdef VISUALIZER
             if (!is_otap()) {
-                neighbor_discovery.register_debug_callback(0);
+                //neighbor_discovery.register_debug_callback(0);
                 clustering_algo_.register_debug_callback();
             }
 #endif

@@ -8,7 +8,7 @@
 #include "algorithms/cluster/clustering_types.h"
 
 // Replace the first Algorithm name with one from the list in comment
-#define MOCA //FRONTS MOCA
+#define FRONTS //FRONTS MOCA
 #ifdef FRONTS
 #include "algorithms/cluster/fronts/fronts_core.h"
 #endif
