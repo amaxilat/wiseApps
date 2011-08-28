@@ -1,4 +1,4 @@
-/*
+/**
  * Clustering Application Using Echo
  */
 
@@ -46,8 +46,8 @@ typedef Os::TxRadio Radio;
 
 
 
-typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64> FloodingStaticMap;
-typedef wiselib::FloodingAlgorithm<Os,FloodingStaticMap, Os::TxRadio, Os::Debug> tree_routing_t;
+typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
+typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> tree_routing_t;
 
 
 typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
@@ -112,7 +112,7 @@ public:
         radio_->enable_radio();
         routing_.init(*radio_, *debug_);
         routing_.enable_radio();
-        
+
 
         rand_->srand(radio_->id());
 
@@ -156,7 +156,7 @@ public:
 
         debug_->debug("********BOOT*********");
 
-        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, 0);
+        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (1000, this, 0);
 
     }
 
@@ -184,7 +184,7 @@ public:
             clustering_algo_.init(routing_, *timer_, *debug_, *rand_, neighbor_discovery);
 
 
-            clustering_algo_.set_demands();
+
 
             //debug_->debug("ON");
             disabled_ = true;
@@ -197,7 +197,7 @@ public:
                 clustering_algo_.register_debug_callback();
             }
 #endif
-            enable();
+            //enable();
 
         } else {
             //            debug_->debug("NBsize %d", neighbor_discovery.stable_nb_size());
@@ -259,6 +259,14 @@ public:
                         change_k(data[2]);
                         command.set_controll_type(ControllMsg_t::CHANGE_K);
                         command.set_payload(data[2]);
+                        break;
+                    case 0x6:
+                        set_semantic(data[2], data[3]);
+                        //command.set_controll_type(ControllMsg_t::CHANGE_K);
+                        //command.set_payload(data[2]);
+                        break;
+                    case 0x7:
+                        set_demands(data[2], data[3]);
                         break;
                 }
                 radio_->send(0xffff, command.size(), (uint8_t *) & command);
@@ -455,6 +463,15 @@ private:
         //        clustering_algo_.set_maxhops(k);
     }
 
+    void set_semantic(int id, int value) {
+        debug_->debug("Set Semantic:%d Value:%d", id, value);
+        clustering_algo_.set_semantic(id, value);
+    }
+
+    void set_demands(int id, int value) {
+//        debug_->debug("Set demands:%d|%d", id, value);
+        clustering_algo_.set_demands(id, value);
+    }
 
     nb_t neighbor_discovery;
     tree_routing_t routing_;
