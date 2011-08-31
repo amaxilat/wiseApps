@@ -2,7 +2,16 @@
  * Clustering Application Using Echo
  */
 
-#include "external_interface/external_interface_testing.h"
+#include "external_interface/external_interface.h"
+#include <isense/modules/environment_module/environment_module.h>
+
+#ifdef SHAWN
+
+#endif
+#ifdef ISENSE
+#include "external_interface/isense/isense_light_sensor.h"
+#endif
+
 #include "algorithms/neighbor_discovery/echo.h"
 
 #include "algorithms/cluster/clustering_types.h"
@@ -56,13 +65,16 @@ typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
 #ifdef SPIT
-typedef wiselib::SemanticClusterHeadDecision<Os, tree_routing_t> CHD_t;
-typedef wiselib::SemanticJoinDecision<Os, tree_routing_t> JD_t;
-typedef wiselib::OverlappingIterator<Os, tree_routing_t> IT_t;
-typedef wiselib::SpitCore<Os, tree_routing_t, CHD_t, JD_t, IT_t, nb_t> clustering_algo_t;
+typedef wiselib::Semantics<Os, Radio> semantics_t;
+typedef wiselib::SemanticClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
+typedef wiselib::SemanticJoinDecision<Os, Radio, semantics_t> JD_t;
+typedef wiselib::FrontsIterator<Os, Radio, semantics_t> IT_t;
+typedef wiselib::SpitCore<Os, Radio, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
 #endif
 
 typedef Os::Uart::size_t uart_size_t;
+
+
 
 //#define REMOTE_DEBUG
 #ifdef REMOTE_DEBUG
@@ -81,8 +93,18 @@ typedef wiselib::RemoteDebugModel<Os, Radio, routing_t, flooding_t, Os::Timer> r
 typedef wiselib::ControllMsg<Os, Radio> ControllMsg_t;
 typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
-class ClusteringFronts {
+class ClusteringFronts :
+public isense::Uint32DataHandler,
+public isense::Int8DataHandler {
 public:
+
+    void handle_uint32_data(uint32 value) {
+    }
+
+    //--------------------------------------------------------------
+
+    void handle_int8_data(int8 value) {
+    }
 
     void init(Os::AppMainParameter& value) {
 
@@ -98,8 +120,6 @@ public:
         rand_ = &wiselib::FacetProvider<Os, Os::Rand>::get_facet(value);
 
 
-
-
 #ifdef VIRTUAL_RADIO
         radio_ = &virtual_radio_;
         hardware_radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
@@ -111,6 +131,7 @@ public:
 
         radio_->enable_radio();
         routing_.init(*radio_, *debug_);
+
         routing_.enable_radio();
 
 
@@ -138,7 +159,26 @@ public:
 
 
 
+        em_ = new isense::EnvironmentModule(value);
+        if (em_ != NULL) {
+            if (em_->light_sensor() != NULL) {
+                em_->light_sensor()->set_data_handler(this);
+                //os().add_task_in(Time(10, 0), this, (void*) TASK_SET_LIGHT_THRESHOLD);
+            } else {
+                //            os().debug("iSense::%x Could not allocate light sensor", os().id());
+            }
+            if (em_->temp_sensor() != NULL) {
+                em_->temp_sensor()->set_data_handler(this);
+            } else {
+                //            os().debug("iSense::%x Could not allocate temp sensor", os().id());
+            }
 
+            //        os().debug("iSense::%x::enabled em", os().id());
+            em_->enable(true);
+        }
+
+
+        semantics_.init(*radio_);
 
 
 #ifdef CHANGE_POWER
@@ -174,14 +214,14 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 10000, 230, 250);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 8000, 50000, 230, 250);
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
             clustering_algo_.set_join_decision(JD_);
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
-            clustering_algo_.init(routing_, *timer_, *debug_, *rand_, neighbor_discovery);
+            clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery, semantics_);
 
 
 
@@ -200,6 +240,9 @@ public:
             //enable();
 
         } else {
+
+
+
             //            debug_->debug("NBsize %d", neighbor_discovery.stable_nb_size());
             //            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
             //clustering_algo_.present_neighbors();
@@ -223,6 +266,8 @@ public:
         //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
         //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
 
+        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
 
         timer_->set_timer<ClusteringFronts,
                 &ClusteringFronts::start > (10000, this, (void *) 1);
@@ -465,11 +510,11 @@ private:
 
     void set_semantic(int id, int value) {
         debug_->debug("Set Semantic:%d Value:%d", id, value);
-        clustering_algo_.set_semantic(id, value);
+        semantics_.set_semantic(id, value);
     }
 
     void set_demands(int id, int value) {
-//        debug_->debug("Set demands:%d|%d", id, value);
+        //        debug_->debug("Set demands:%d|%d", id, value);
         clustering_algo_.set_demands(id, value);
     }
 
@@ -506,6 +551,10 @@ private:
     clustering_algo_t clustering_algo_;
     bool disabled_;
 
+    semantics_t semantics_;
+
+
+    isense::EnvironmentModule* em_;
 
 
     Os::Timer::self_pointer_t timer_;
