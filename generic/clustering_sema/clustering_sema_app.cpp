@@ -4,6 +4,8 @@
 
 #include "external_interface/external_interface.h"
 #include <isense/modules/environment_module/environment_module.h>
+#include <isense/modules/security_module/pir_sensor.h>
+
 
 #ifdef SHAWN
 
@@ -55,8 +57,8 @@ typedef Os::TxRadio Radio;
 
 
 
-typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
-typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> tree_routing_t;
+//typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
+//typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> tree_routing_t;
 
 
 typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
@@ -95,7 +97,8 @@ typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
 class ClusteringFronts :
 public isense::Uint32DataHandler,
-public isense::Int8DataHandler {
+public isense::Int8DataHandler,
+public isense::SensorHandler {
 public:
 
     void handle_uint32_data(uint32 value) {
@@ -130,14 +133,13 @@ public:
 #endif
 
         radio_->enable_radio();
-        routing_.init(*radio_, *debug_);
-
-        routing_.enable_radio();
+        //        routing_.init(*radio_, *debug_);
+        //        routing_.enable_radio();
 
 
         rand_->srand(radio_->id());
 
-        radio_->reg_recv_callback<ClusteringFronts, &ClusteringFronts::receive_commands > (this);
+        //        radio_->reg_recv_callback<ClusteringFronts, &ClusteringFronts::receive_commands > (this);
 
         //clustering_algo_.reg_state_changed_callback<ClusteringFronts, &ClusteringFronts::clustering_events > (this);
         //neighbor_discovery.reg_event_callback<ClusteringFronts, &ClusteringFronts::nd_callback > (7, nb_t::NEW_NB | nb_t::NEW_NB_BIDI, this);
@@ -176,6 +178,15 @@ public:
             //        os().debug("iSense::%x::enabled em", os().id());
             em_->enable(true);
         }
+        pir_ = new isense::PirSensor(value);
+        // ----- configure PIR sensor -------------
+        // set this application as the sensor event handler
+        // --> handle_sensor will be called upon a PIR event
+        pir_->set_sensor_handler(this);
+        //set the PIR event duration to 2 secs
+        pir_->set_pir_sensor_int_interval(2000);
+        // switch on the PIR sensor
+        pir_->enable();
 
 
         semantics_.init(*radio_);
@@ -194,10 +205,15 @@ public:
         uart_->enable_serial_comm();
 #endif
 
-        debug_->debug("********BOOT*********");
+        debug_->debug("*B*");
 
         timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (1000, this, 0);
 
+    }
+
+    void handle_sensor() {
+        debug_->debug("pir event from node %x", radio_->id());
+        semantics_.set_semantic_value(semantics_t::PIR, 1);
     }
 
     bool is_otap() {
@@ -214,7 +230,7 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 8000, 50000, 230, 250);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 10000, 200, 230);
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
@@ -228,7 +244,7 @@ public:
 
             //debug_->debug("ON");
             disabled_ = true;
-            //neighbor_discovery.enable();
+            //            neighbor_discovery.enable();
             //clustering_algo_.enable(40);
 
 #ifdef VISUALIZER
@@ -265,12 +281,12 @@ public:
 
         //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
         //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
-
+        semantics_.set_semantic_value(semantics_t::PIR, 0);
         semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
         semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
 
         timer_->set_timer<ClusteringFronts,
-                &ClusteringFronts::start > (10000, this, (void *) 1);
+                &ClusteringFronts::start > (60000, this, (void *) 1);
 
     }
 
@@ -320,147 +336,147 @@ public:
     }
 #endif
 
-    void receive_commands(Os::Radio::node_id_t src, Os::Radio::size_t len, Os::Radio::block_data_t * mess) {
-        if (!is_otap()) {
-            ReportMsg_t *m = (ReportMsg_t *) mess;
-            if (m->msg_id() == ReportMsg_t::REPORT_MSG) {
-                switch (m->report_type()) {
-                    case ReportMsg_t::CLUSTER:
-                        debug_->debug("Got cluster %x from %x ", m->cluster_id(), src);
-                        if (src == m->cluster_id()) {
-                            debug_->debug("CLP;%x;2;%x", src, m->cluster_id());
-                        } else {
-                            debug_->debug("CLP;%x;1;%x", src, m->cluster_id());
-                        }
-                        return;
-                    case ReportMsg_t::CLUSTER_MESSAGE:
-                        debug_->debug("CLS;%x;45;%x", src, 0xffff);
-                        return;
-                    case ReportMsg_t::NEW_NB:
-                        debug_->debug("NB;%x;%x", m->node_id(), src);
-                        return;
-                    case ReportMsg_t::NEW_NB_BIDI:
-                        debug_->debug("NBB;%x;%x", m->node_id(), src);
-                        return;
-                    case ReportMsg_t::DROPPED_NB:
-                        debug_->debug("NBD;%x;%x", m->node_id(), src);
-                        return;
-                    case ReportMsg_t::LOST_NB_BIDI:
-                        debug_->debug("NBL;%x;%x", m->node_id(), src);
-                        return;
-                    default:
-                        return;
-                }
-            }
-            return;
-        } else {
-            ControllMsg_t *m = (ControllMsg_t *) mess;
-            if (m->msg_id() == ControllMsg_t::CONTROLL_MSG) {
-                switch (m->controll_type()) {
-                    case ControllMsg_t::ON:
-                        enable();
-                        return;
-                    case ControllMsg_t::OFF:
-                        disable();
-                        return;
-                    case ControllMsg_t::FAIL:
-                        fail();
-                        return;
-                    case ControllMsg_t::RECOVER:
-                        recover();
-                        return;
-                    case ControllMsg_t::CHANGE_K:
-                        change_k(m->payload());
-                        return;
+    //    void receive_commands(Os::Radio::node_id_t src, Os::Radio::size_t len, Os::Radio::block_data_t * mess) {
+    //        if (!is_otap()) {
+    //            ReportMsg_t *m = (ReportMsg_t *) mess;
+    //            if (m->msg_id() == ReportMsg_t::REPORT_MSG) {
+    //                switch (m->report_type()) {
+    //                    case ReportMsg_t::CLUSTER:
+    //                        debug_->debug("Got cluster %x from %x ", m->cluster_id(), src);
+    //                        if (src == m->cluster_id()) {
+    //                            debug_->debug("CLP;%x;2;%x", src, m->cluster_id());
+    //                        } else {
+    //                            debug_->debug("CLP;%x;1;%x", src, m->cluster_id());
+    //                        }
+    //                        return;
+    //                    case ReportMsg_t::CLUSTER_MESSAGE:
+    //                        debug_->debug("CLS;%x;45;%x", src, 0xffff);
+    //                        return;
+    //                    case ReportMsg_t::NEW_NB:
+    //                        debug_->debug("NB;%x;%x", m->node_id(), src);
+    //                        return;
+    //                    case ReportMsg_t::NEW_NB_BIDI:
+    //                        debug_->debug("NBB;%x;%x", m->node_id(), src);
+    //                        return;
+    //                    case ReportMsg_t::DROPPED_NB:
+    //                        debug_->debug("NBD;%x;%x", m->node_id(), src);
+    //                        return;
+    //                    case ReportMsg_t::LOST_NB_BIDI:
+    //                        debug_->debug("NBL;%x;%x", m->node_id(), src);
+    //                        return;
+    //                    default:
+    //                        return;
+    //                }
+    //            }
+    //            return;
+    //        } else {
+    //            ControllMsg_t *m = (ControllMsg_t *) mess;
+    //            if (m->msg_id() == ControllMsg_t::CONTROLL_MSG) {
+    //                switch (m->controll_type()) {
+    //                    case ControllMsg_t::ON:
+    //                        enable();
+    //                        return;
+    //                    case ControllMsg_t::OFF:
+    //                        disable();
+    //                        return;
+    //                    case ControllMsg_t::FAIL:
+    //                        fail();
+    //                        return;
+    //                    case ControllMsg_t::RECOVER:
+    //                        recover();
+    //                        return;
+    //                    case ControllMsg_t::CHANGE_K:
+    //                        change_k(m->payload());
+    //                        return;
+    //
+    //                    default:
+    //                        return;
+    //                }
+    //            }
+    //        }
+    //    }
 
-                    default:
-                        return;
-                }
-            }
-        }
-    }
+    //    void clustering_events(int event) {
+    //        if (is_otap()) {
+    //            ReportMsg_t mess;
+    //            mess.set_msg_id(ReportMsg_t::REPORT_MSG);
+    //            switch (event) {
+    //                case wiselib::CLUSTER_FORMED:
+    //                case wiselib::NODE_JOINED:
+    //                case wiselib::ELECTED_CLUSTER_HEAD:
+    //                    mess.set_report_type(ReportMsg_t::CLUSTER);
+    //                    mess.set_cluster_id(clustering_algo_.cluster_id());
+    //                    radio_->send(0xffff, mess.size(), (uint8_t*) & mess);
+    //                    return;
+    //                case wiselib::MESSAGE_SENT:
+    //                    mess.set_report_type(ReportMsg_t::CLUSTER_MESSAGE);
+    //                    radio_->send(0xffff, mess.size(), (uint8_t*) & mess);
+    //                    return;
+    //                default:
+    //                    return;
+    //            }
+    //        } else {
+    //            switch (event) {
+    //                case wiselib::CLUSTER_FORMED:
+    //                case wiselib::NODE_JOINED:
+    //                case wiselib::ELECTED_CLUSTER_HEAD:
+    //                    if (clustering_algo_.cluster_id() == radio_->id()) {
+    //                        debug_->debug("CLP;%x;2;%x", radio_->id(), clustering_algo_.cluster_id());
+    //                    } else {
+    //                        debug_->debug("CLP;%x;1;%x", radio_->id(), clustering_algo_.cluster_id());
+    //                    }
+    //                    return;
+    //                case wiselib::MESSAGE_SENT:
+    //                    debug_->debug("CLS;%x;45;%x", radio_->id(), 0xffff);
+    //                    return;
+    //                default:
+    //                    return;
+    //            }
+    //        }
+    //    }
 
-    void clustering_events(int event) {
-        if (is_otap()) {
-            ReportMsg_t mess;
-            mess.set_msg_id(ReportMsg_t::REPORT_MSG);
-            switch (event) {
-                case wiselib::CLUSTER_FORMED:
-                case wiselib::NODE_JOINED:
-                case wiselib::ELECTED_CLUSTER_HEAD:
-                    mess.set_report_type(ReportMsg_t::CLUSTER);
-                    mess.set_cluster_id(clustering_algo_.cluster_id());
-                    radio_->send(0xffff, mess.size(), (uint8_t*) & mess);
-                    return;
-                case wiselib::MESSAGE_SENT:
-                    mess.set_report_type(ReportMsg_t::CLUSTER_MESSAGE);
-                    radio_->send(0xffff, mess.size(), (uint8_t*) & mess);
-                    return;
-                default:
-                    return;
-            }
-        } else {
-            switch (event) {
-                case wiselib::CLUSTER_FORMED:
-                case wiselib::NODE_JOINED:
-                case wiselib::ELECTED_CLUSTER_HEAD:
-                    if (clustering_algo_.cluster_id() == radio_->id()) {
-                        debug_->debug("CLP;%x;2;%x", radio_->id(), clustering_algo_.cluster_id());
-                    } else {
-                        debug_->debug("CLP;%x;1;%x", radio_->id(), clustering_algo_.cluster_id());
-                    }
-                    return;
-                case wiselib::MESSAGE_SENT:
-                    debug_->debug("CLS;%x;45;%x", radio_->id(), 0xffff);
-                    return;
-                default:
-                    return;
-            }
-        }
-    }
-
-    void nd_callback(uint8_t event, node_id_t from, uint8_t len, uint8_t * data) {
-        if (disabled_) return;
-        if (is_otap()) {
-            ReportMsg_t mess;
-            mess.set_msg_id(ReportMsg_t::REPORT_MSG);
-            switch (event) {
-                case nb_t::DROPPED_NB:
-                    mess.set_report_type(ReportMsg_t::DROPPED_NB);
-                    break;
-                case nb_t::LOST_NB_BIDI:
-                    mess.set_report_type(ReportMsg_t::LOST_NB_BIDI);
-                    break;
-                case nb_t::NEW_NB_BIDI:
-                    mess.set_report_type(ReportMsg_t::NEW_NB_BIDI);
-                    break;
-                case nb_t::NEW_NB:
-                    mess.set_report_type(ReportMsg_t::NEW_NB);
-                    break;
-                default:
-                    return;
-            }
-            mess.set_node_id(from);
-            radio_->send(0xffff, mess.size(), (uint8_t *) & mess);
-        } else {
-            switch (event) {
-                case nb_t::DROPPED_NB:
-                    debug_->debug("NBD;%x;%x", from, radio_->id());
-                    break;
-                case nb_t::LOST_NB_BIDI:
-                    debug_->debug("NBL;%x;%x", from, radio_->id());
-                    break;
-                case nb_t::NEW_NB_BIDI:
-                    debug_->debug("NBB;%x;%x", from, radio_->id());
-                    break;
-                case nb_t::NEW_NB:
-                    debug_->debug("NB;%x;%x", from, radio_->id());
-                    break;
-                default:
-                    return;
-            }
-        }
-    }
+    //    void nd_callback(uint8_t event, node_id_t from, uint8_t len, uint8_t * data) {
+    //        if (disabled_) return;
+    //        if (is_otap()) {
+    //            ReportMsg_t mess;
+    //            mess.set_msg_id(ReportMsg_t::REPORT_MSG);
+    //            switch (event) {
+    //                case nb_t::DROPPED_NB:
+    //                    mess.set_report_type(ReportMsg_t::DROPPED_NB);
+    //                    break;
+    //                case nb_t::LOST_NB_BIDI:
+    //                    mess.set_report_type(ReportMsg_t::LOST_NB_BIDI);
+    //                    break;
+    //                case nb_t::NEW_NB_BIDI:
+    //                    mess.set_report_type(ReportMsg_t::NEW_NB_BIDI);
+    //                    break;
+    //                case nb_t::NEW_NB:
+    //                    mess.set_report_type(ReportMsg_t::NEW_NB);
+    //                    break;
+    //                default:
+    //                    return;
+    //            }
+    //            mess.set_node_id(from);
+    //            radio_->send(0xffff, mess.size(), (uint8_t *) & mess);
+    //        } else {
+    //            switch (event) {
+    //                case nb_t::DROPPED_NB:
+    //                    debug_->debug("NBD;%x;%x", from, radio_->id());
+    //                    break;
+    //                case nb_t::LOST_NB_BIDI:
+    //                    debug_->debug("NBL;%x;%x", from, radio_->id());
+    //                    break;
+    //                case nb_t::NEW_NB_BIDI:
+    //                    debug_->debug("NBB;%x;%x", from, radio_->id());
+    //                    break;
+    //                case nb_t::NEW_NB:
+    //                    debug_->debug("NB;%x;%x", from, radio_->id());
+    //                    break;
+    //                default:
+    //                    return;
+    //            }
+    //        }
+    //    }
 
 
 private:
@@ -509,17 +525,21 @@ private:
     }
 
     void set_semantic(int id, int value) {
-        debug_->debug("Set Semantic:%d Value:%d", id, value);
+        debug_->debug("SS;%d;%d", id, value);
         semantics_.set_semantic(id, value);
     }
 
     void set_demands(int id, int value) {
-        //        debug_->debug("Set demands:%d|%d", id, value);
+        debug_->debug("SD;%d;%d", id, value);
         clustering_algo_.set_demands(id, value);
+
+        semantics_.set_semantic_value(semantics_t::PIR, 0);
+//        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+//        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
     }
 
     nb_t neighbor_discovery;
-    tree_routing_t routing_;
+    //    tree_routing_t routing_;
 
     Os::Position *position_;
     bool clustering_enabled_;
@@ -555,6 +575,7 @@ private:
 
 
     isense::EnvironmentModule* em_;
+    isense::PirSensor* pir_;
 
 
     Os::Timer::self_pointer_t timer_;
