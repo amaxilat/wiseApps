@@ -57,8 +57,8 @@ typedef Os::TxRadio Radio;
 
 
 
-//typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
-//typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> tree_routing_t;
+typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
+typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> routing_t;
 
 
 typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
@@ -67,11 +67,11 @@ typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
 #ifdef SPIT
-typedef wiselib::Semantics<Os, Radio> semantics_t;
-typedef wiselib::SemanticClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
-typedef wiselib::SemanticJoinDecision<Os, Radio, semantics_t> JD_t;
-typedef wiselib::FrontsIterator<Os, Radio, semantics_t> IT_t;
-typedef wiselib::SpitCore<Os, Radio, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
+typedef wiselib::Semantics<Os, routing_t> semantics_t;
+typedef wiselib::SemanticClusterHeadDecision<Os, routing_t, semantics_t> CHD_t;
+typedef wiselib::SemanticJoinDecision<Os, routing_t, semantics_t> JD_t;
+typedef wiselib::FrontsIterator<Os, routing_t, semantics_t> IT_t;
+typedef wiselib::SpitCore<Os, routing_t, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
 #endif
 
 typedef Os::Uart::size_t uart_size_t;
@@ -133,8 +133,8 @@ public:
 #endif
 
         radio_->enable_radio();
-        //        routing_.init(*radio_, *debug_);
-        //        routing_.enable_radio();
+        routing_.init(*radio_, *debug_);
+        routing_.enable_radio();
 
 
         rand_->srand(radio_->id());
@@ -189,7 +189,7 @@ public:
         pir_->enable();
 
 
-        semantics_.init(*radio_);
+        semantics_.init(routing_);
 
 
 #ifdef CHANGE_POWER
@@ -212,7 +212,7 @@ public:
     }
 
     void handle_sensor() {
-        debug_->debug("pir event from node %x", radio_->id());
+//        debug_->debug("pir event from node %x", radio_->id());
         semantics_.set_semantic_value(semantics_t::PIR, 1);
     }
 
@@ -237,7 +237,7 @@ public:
             clustering_algo_.set_join_decision(JD_);
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
-            clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery, semantics_);
+            clustering_algo_.init(routing_, *timer_, *debug_, *rand_, neighbor_discovery, semantics_);
 
 
 
@@ -286,7 +286,7 @@ public:
         semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
 
         timer_->set_timer<ClusteringFronts,
-                &ClusteringFronts::start > (60000, this, (void *) 1);
+                &ClusteringFronts::start > (1000, this, (void *) 1);
 
     }
 
@@ -484,8 +484,8 @@ private:
     void enable() {
         if (disabled_) {
             debug_->debug("ON");
-            neighbor_discovery.enable();
-            clustering_algo_.enable(20);
+//            neighbor_discovery.enable();
+            clustering_algo_.enable(5);
             disabled_ = false;
         }
     }
@@ -513,7 +513,7 @@ private:
     void recover() {
         if (disabled_) {
             debug_->debug("Recovering;%x", radio_->id());
-            neighbor_discovery.enable();
+//            neighbor_discovery.enable();
             clustering_algo_.enable(20);
             disabled_ = false;
         }
@@ -534,12 +534,12 @@ private:
         clustering_algo_.set_demands(id, value);
 
         semantics_.set_semantic_value(semantics_t::PIR, 0);
-//        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-//        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+        //        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+        //        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
     }
 
     nb_t neighbor_discovery;
-    //    tree_routing_t routing_;
+    routing_t routing_;
 
     Os::Position *position_;
     bool clustering_enabled_;
