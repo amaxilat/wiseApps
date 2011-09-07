@@ -21,11 +21,6 @@
 #include "algorithms/routing/flooding/flooding_algorithm.h"
 
 
-// Replace the first Algorithm name with one from the list in comment
-#define SPIT
-#ifdef SPIT
-#include "algorithms/cluster/spit/spit_core.h"
-#endif
 
 #include "controll_message.h"
 #include "report_message.h"
@@ -66,8 +61,17 @@ typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
-#ifdef SPIT
 typedef wiselib::Semantics<Os, routing_t> semantics_t;
+
+// Replace the first Algorithm name with one from the list in comment
+#define SPIT
+#ifdef SPIT
+#include "algorithms/cluster/spit/spit_core.h"
+#endif
+
+
+#ifdef SPIT
+
 typedef wiselib::SemanticClusterHeadDecision<Os, routing_t, semantics_t> CHD_t;
 typedef wiselib::SemanticJoinDecision<Os, routing_t, semantics_t> JD_t;
 typedef wiselib::FrontsIterator<Os, routing_t, semantics_t> IT_t;
@@ -115,6 +119,7 @@ public:
 
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
         debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
+        debug_->debug("*B*");
         clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
         position_ = &wiselib::FacetProvider<Os, Os::Position>::get_facet(value);
 #ifdef ENABLE_UART_CL
@@ -160,7 +165,7 @@ public:
 #endif
 
 
-
+        debug_->debug("em");
         em_ = new isense::EnvironmentModule(value);
         if (em_ != NULL) {
             if (em_->light_sensor() != NULL) {
@@ -178,17 +183,18 @@ public:
             //        os().debug("iSense::%x::enabled em", os().id());
             em_->enable(true);
         }
-        pir_ = new isense::PirSensor(value);
-        // ----- configure PIR sensor -------------
-        // set this application as the sensor event handler
-        // --> handle_sensor will be called upon a PIR event
-        pir_->set_sensor_handler(this);
-        //set the PIR event duration to 2 secs
-        pir_->set_pir_sensor_int_interval(2000);
-        // switch on the PIR sensor
-        pir_->enable();
+        debug_->debug("pir");
+        //        pir_ = new isense::PirSensor(value);
+        //        // ----- configure PIR sensor -------------
+        //        // set this application as the sensor event handler
+        //        // --> handle_sensor will be called upon a PIR event
+        //        pir_->set_sensor_handler(this);
+        //        //set the PIR event duration to 2 secs
+        //        pir_->set_pir_sensor_int_interval(2000);
+        //        // switch on the PIR sensor
+        //        pir_->enable();
 
-
+        debug_->debug("semas");
         semantics_.init(routing_);
 
 
@@ -205,14 +211,14 @@ public:
         uart_->enable_serial_comm();
 #endif
 
-        debug_->debug("*B*");
+
 
         timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (1000, this, 0);
 
     }
 
     void handle_sensor() {
-//        debug_->debug("pir event from node %x", radio_->id());
+        //        debug_->debug("pir event from node %x", radio_->id());
         semantics_.set_semantic_value(semantics_t::PIR, 1);
     }
 
@@ -253,7 +259,19 @@ public:
                 clustering_algo_.register_debug_callback();
             }
 #endif
-            //enable();
+
+            if (radio_->id()==0x153d){
+            set_semantic(4, 2);
+            }else set_semantic(4, 3);
+            
+            
+
+            set_semantic(211, 0);
+            //            set_semantic(4, 4);
+            //            set_demands(4, 0xff);
+            enable();
+
+
 
         } else {
 
@@ -281,12 +299,12 @@ public:
 
         //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
         //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
-        semantics_.set_semantic_value(semantics_t::PIR, 0);
-        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+        //        semantics_.set_semantic_value(semantics_t::PIR, 0);
+        //        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+        //        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
 
         timer_->set_timer<ClusteringFronts,
-                &ClusteringFronts::start > (1000, this, (void *) 1);
+                &ClusteringFronts::start > (4000, this, (void *) 1);
 
     }
 
@@ -327,10 +345,16 @@ public:
                         //command.set_payload(data[2]);
                         break;
                     case 0x7:
-                        set_demands(data[2], data[3]);
+
+                        for (uint8_t pos = 2; pos + 1 < len; pos += 2) {
+                            set_demands(data[pos], data[pos + 1]);
+                        }
+                        break;
+                    case 0x8:
+                        query();
                         break;
                 }
-                radio_->send(0xffff, command.size(), (uint8_t *) & command);
+                //                radio_->send(0xffff, command.size(), (uint8_t *) & command);
             }
         }
     }
@@ -484,7 +508,7 @@ private:
     void enable() {
         if (disabled_) {
             debug_->debug("ON");
-//            neighbor_discovery.enable();
+            //            neighbor_discovery.enable();
             clustering_algo_.enable(5);
             disabled_ = false;
         }
@@ -513,7 +537,7 @@ private:
     void recover() {
         if (disabled_) {
             debug_->debug("Recovering;%x", radio_->id());
-//            neighbor_discovery.enable();
+            //            neighbor_discovery.enable();
             clustering_algo_.enable(20);
             disabled_ = false;
         }
@@ -531,11 +555,15 @@ private:
 
     void set_demands(int id, int value) {
         debug_->debug("SD;%d;%d", id, value);
-        clustering_algo_.set_demands(id, value);
+        //        clustering_algo_.set_demands(id, value);
 
-        semantics_.set_semantic_value(semantics_t::PIR, 0);
+        //        semantics_.set_semantic_value(semantics_t::PIR, 0);
         //        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
         //        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+    }
+
+    void query() {
+        clustering_algo_.answer(0);
     }
 
     nb_t neighbor_discovery;
