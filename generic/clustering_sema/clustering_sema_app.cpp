@@ -61,7 +61,7 @@ typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
-typedef wiselib::Semantics<Os, routing_t> semantics_t;
+typedef wiselib::Semantics<Os> semantics_t;
 
 // Replace the first Algorithm name with one from the list in comment
 #define SPIT
@@ -120,8 +120,7 @@ public:
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
         debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
         debug_->debug("*B*");
-        clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
-        position_ = &wiselib::FacetProvider<Os, Os::Position>::get_facet(value);
+        clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);      
 #ifdef ENABLE_UART_CL
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
 #endif
@@ -194,10 +193,7 @@ public:
         //        // switch on the PIR sensor
         //        pir_->enable();
 
-        debug_->debug("semas");
-        semantics_.init(routing_);
-
-
+        
 #ifdef CHANGE_POWER
         TxPower power;
         power.set_dB(DB);
@@ -260,11 +256,9 @@ public:
             }
 #endif
 
-            if (radio_->id()==0x153d){
-            set_semantic(4, 2);
-            }else set_semantic(4, 3);
-            
-            
+            set_semantic(4, 3);
+            set_semantic(5, 3);
+
 
             set_semantic(211, 0);
             //            set_semantic(4, 4);
@@ -345,14 +339,13 @@ public:
                         //command.set_payload(data[2]);
                         break;
                     case 0x7:
-
+                        //run a query
                         for (uint8_t pos = 2; pos + 1 < len; pos += 2) {
                             set_demands(data[pos], data[pos + 1]);
                         }
-                        break;
-                    case 0x8:
                         query();
                         break;
+
                 }
                 //                radio_->send(0xffff, command.size(), (uint8_t *) & command);
             }
@@ -555,7 +548,7 @@ private:
 
     void set_demands(int id, int value) {
         debug_->debug("SD;%d;%d", id, value);
-        //        clustering_algo_.set_demands(id, value);
+        clustering_algo_.set_demands(id, value);
 
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
         //        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
@@ -568,8 +561,7 @@ private:
 
     nb_t neighbor_discovery;
     routing_t routing_;
-
-    Os::Position *position_;
+    
     bool clustering_enabled_;
 
     bool head_dropped_;
