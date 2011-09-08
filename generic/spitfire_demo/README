@@ -1,0 +1,4 @@
+1) replace ~/tools/shawn/src/apps/wiselib/ext_iface_processor.cpp in the local cpp
+2) recompile shawn
+3) from the buildfiles dir exec: cp lib* ../libraries/
+4) recompile clustering_app (make shawn)

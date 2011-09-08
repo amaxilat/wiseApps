@@ -3,6 +3,7 @@
  */
 
 #include "external_interface/external_interface.h"
+#define USE_SENSORS
 #ifdef USE_SENSORS
 #include <isense/modules/environment_module/environment_module.h>
 #include <isense/modules/security_module/pir_sensor.h>
@@ -15,6 +16,8 @@
 #include "external_interface/isense/isense_light_sensor.h"
 #endif
 #endif
+
+
 //#include "algorithms/neighbor_discovery/echo.h"
 
 #include "algorithms/cluster/clustering_types.h"
@@ -62,7 +65,7 @@ typedef Os::TxRadio Radio;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
-typedef wiselib::Semantics<Os,Os::Debug> semantics_t;
+typedef wiselib::Semantics<Os> semantics_t;
 
 // Replace the first Algorithm name with one from the list in comment
 #define SPIT
@@ -139,11 +142,8 @@ public:
 #endif
 
         radio_->enable_radio();
-//        routing_.init(*radio_, *debug_);
-//        routing_.enable_radio();
-
-        
-        semantics_.init(*debug_);
+        //        routing_.init(*radio_, *debug_);
+        //        routing_.enable_radio();    
 
         rand_->srand(radio_->id());
 
@@ -168,24 +168,24 @@ public:
 #endif
 
 
-        //        debug_->debug("em");
-        //        em_ = new isense::EnvironmentModule(value);
-        //        if (em_ != NULL) {
-        //            if (em_->light_sensor() != NULL) {
-        //                em_->light_sensor()->set_data_handler(this);
-        //                //os().add_task_in(Time(10, 0), this, (void*) TASK_SET_LIGHT_THRESHOLD);
-        //            } else {
-        //                //            os().debug("iSense::%x Could not allocate light sensor", os().id());
-        //            }
-        //            if (em_->temp_sensor() != NULL) {
-        //                em_->temp_sensor()->set_data_handler(this);
-        //            } else {
-        //                //            os().debug("iSense::%x Could not allocate temp sensor", os().id());
-        //            }
-        //
-        //            //        os().debug("iSense::%x::enabled em", os().id());
-        //            em_->enable(true);
-        //        }
+        debug_->debug("em");
+        em_ = new isense::EnvironmentModule(value);
+        if (em_ != NULL) {
+            if (em_->light_sensor() != NULL) {
+                em_->light_sensor()->set_data_handler(this);
+                //os().add_task_in(Time(10, 0), this, (void*) TASK_SET_LIGHT_THRESHOLD);
+            } else {
+                //            os().debug("iSense::%x Could not allocate light sensor", os().id());
+            }
+            if (em_->temp_sensor() != NULL) {
+                em_->temp_sensor()->set_data_handler(this);
+            } else {
+                //            os().debug("iSense::%x Could not allocate temp sensor", os().id());
+            }
+
+            //        os().debug("iSense::%x::enabled em", os().id());
+            em_->enable(true);
+        }
         //        debug_->debug("pir");
         //        pir_ = new isense::PirSensor(value);
         //        // ----- configure PIR sensor -------------
@@ -262,18 +262,6 @@ public:
             }
 #endif
 
-            //            set_semantic(4, 3);
-            //            set_semantic(5, 3);
-            //
-            //
-            //            set_semantic(211, 0);
-            //            //            set_semantic(4, 4);
-            //            set_demands(210, 0);
-            //            set_demands(211, 0);
-            //            enable();
-
-
-
         } else {
 
 
@@ -301,11 +289,11 @@ public:
         //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
         //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-        //        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-        //        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+                semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+                semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
 
         timer_->set_timer<ClusteringFronts,
-                &ClusteringFronts::start > (4000, this, (void *) 1);
+                &ClusteringFronts::start > (30000, this, (void *) 1);
 
     }
 
@@ -355,11 +343,22 @@ public:
                         //run a query
                         for (uint8_t pos = 2; pos < len; pos += 2 * sizeof (int)) {
                             int semantic_id, semantic_value;
-                            memcpy(&semantic_id, data + 2, sizeof (int));
-                            memcpy(&semantic_value, data + 6, sizeof (int));
+                            memcpy(&semantic_id, data + pos, sizeof (int));
+                            memcpy(&semantic_value, data + pos + 4, sizeof (int));
                             set_demands(semantic_id, semantic_value);
                         }
-                        query();
+                        query(0);
+                        break;
+                    case 0x8:
+                        clustering_algo_.reset_demands();
+                        //run a query
+                        for (uint8_t pos = 2; pos < len; pos += 1 * sizeof (int)) {
+                            int semantic_id, semantic_value;
+                            memcpy(&semantic_id, data + pos, sizeof (int));
+                            semantic_value = 1;
+                            set_demands(semantic_id, semantic_value);
+                        }
+                        query(1);
                         break;
 
                 }
@@ -567,16 +566,16 @@ private:
         clustering_algo_.set_demands(id, value);
 
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-        //                semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-        //                semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
     }
 
-    void query() {
-        clustering_algo_.answer(0);
+    void query(int i) {
+        clustering_algo_.answer((void *) i);
     }
 
     //    nb_t neighbor_discovery;
-//    routing_t routing_;
+    //    routing_t routing_;
 
     bool clustering_enabled_;
 
@@ -610,7 +609,7 @@ private:
     semantics_t semantics_;
 
 
-    //    isense::EnvironmentModule* em_;
+        isense::EnvironmentModule* em_;
     //    isense::PirSensor* pir_;
 
 
