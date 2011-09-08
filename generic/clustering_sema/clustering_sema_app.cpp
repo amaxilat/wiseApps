@@ -53,8 +53,8 @@ typedef Os::TxRadio Radio;
 
 
 
-typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
-typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> routing_t;
+//typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
+//typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> routing_t;
 
 
 //typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
@@ -73,10 +73,10 @@ typedef wiselib::Semantics<Os,Os::Debug> semantics_t;
 
 #ifdef SPIT
 
-typedef wiselib::SemanticClusterHeadDecision<Os, routing_t, semantics_t> CHD_t;
-typedef wiselib::SemanticJoinDecision<Os, routing_t, semantics_t> JD_t;
-typedef wiselib::FrontsIterator<Os, routing_t, semantics_t> IT_t;
-typedef wiselib::SpitCore<Os, routing_t, CHD_t, JD_t, IT_t, semantics_t> clustering_algo_t;
+typedef wiselib::SemanticClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
+typedef wiselib::SemanticJoinDecision<Os, Radio, semantics_t> JD_t;
+typedef wiselib::FrontsIterator<Os, Radio, semantics_t> IT_t;
+typedef wiselib::SpitCore<Os, Radio, CHD_t, JD_t, IT_t, semantics_t> clustering_algo_t;
 #endif
 
 typedef Os::Uart::size_t uart_size_t;
@@ -139,8 +139,8 @@ public:
 #endif
 
         radio_->enable_radio();
-        routing_.init(*radio_, *debug_);
-        routing_.enable_radio();
+//        routing_.init(*radio_, *debug_);
+//        routing_.enable_radio();
 
         
         semantics_.init(*debug_);
@@ -243,7 +243,7 @@ public:
             clustering_algo_.set_join_decision(JD_);
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
-            clustering_algo_.init(routing_, *timer_, *debug_, *rand_, semantics_);
+            clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, semantics_);
 
 
 
@@ -576,7 +576,7 @@ private:
     }
 
     //    nb_t neighbor_discovery;
-    routing_t routing_;
+//    routing_t routing_;
 
     bool clustering_enabled_;
 
