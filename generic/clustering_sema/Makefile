@@ -2,7 +2,7 @@
 # Environment variable WISELIB_PATH needed
 # ----------------------------------------
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/iSense_full
-export ISENSE_PATH=/home/amaxilatis/sdks/iSense
+export ISENSE_PATH=/home/amaxilatis/sdks/iSense.NO.NS.CD
 
 all: clean isense
 # all: scw_msb
@@ -12,6 +12,7 @@ all: clean isense
 # all: tinyos-tossim
 # all: tinyos-micaz
 
+#export APP_SRC=clustering_sema_app_tuplestore.cpp
 export APP_SRC=clustering_sema_app.cpp
 export BIN_OUT=clustering_sema_app
 

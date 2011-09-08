@@ -3,6 +3,7 @@
  */
 
 #include "external_interface/external_interface.h"
+#ifdef USE_SENSORS
 #include <isense/modules/environment_module/environment_module.h>
 #include <isense/modules/security_module/pir_sensor.h>
 
@@ -13,8 +14,8 @@
 #ifdef ISENSE
 #include "external_interface/isense/isense_light_sensor.h"
 #endif
-
-#include "algorithms/neighbor_discovery/echo.h"
+#endif
+//#include "algorithms/neighbor_discovery/echo.h"
 
 #include "algorithms/cluster/clustering_types.h"
 #include "internal_interface/routing_table/routing_table_static_array.h"
@@ -56,12 +57,12 @@ typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
 typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> routing_t;
 
 
-typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
+//typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
 
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
-typedef wiselib::Semantics<Os> semantics_t;
+typedef wiselib::Semantics<Os,Os::Debug> semantics_t;
 
 // Replace the first Algorithm name with one from the list in comment
 #define SPIT
@@ -75,7 +76,7 @@ typedef wiselib::Semantics<Os> semantics_t;
 typedef wiselib::SemanticClusterHeadDecision<Os, routing_t, semantics_t> CHD_t;
 typedef wiselib::SemanticJoinDecision<Os, routing_t, semantics_t> JD_t;
 typedef wiselib::FrontsIterator<Os, routing_t, semantics_t> IT_t;
-typedef wiselib::SpitCore<Os, routing_t, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
+typedef wiselib::SpitCore<Os, routing_t, CHD_t, JD_t, IT_t, semantics_t> clustering_algo_t;
 #endif
 
 typedef Os::Uart::size_t uart_size_t;
@@ -101,8 +102,9 @@ typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
 class ClusteringFronts :
 public isense::Uint32DataHandler,
-public isense::Int8DataHandler,
-public isense::SensorHandler {
+public isense::Int8DataHandler
+//,public isense::SensorHandler 
+{
 public:
 
     void handle_uint32_data(uint32 value) {
@@ -120,7 +122,7 @@ public:
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
         debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
         debug_->debug("*B*");
-        clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);      
+        clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
 #ifdef ENABLE_UART_CL
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
 #endif
@@ -140,6 +142,8 @@ public:
         routing_.init(*radio_, *debug_);
         routing_.enable_radio();
 
+        
+        semantics_.init(*debug_);
 
         rand_->srand(radio_->id());
 
@@ -164,25 +168,25 @@ public:
 #endif
 
 
-        debug_->debug("em");
-        em_ = new isense::EnvironmentModule(value);
-        if (em_ != NULL) {
-            if (em_->light_sensor() != NULL) {
-                em_->light_sensor()->set_data_handler(this);
-                //os().add_task_in(Time(10, 0), this, (void*) TASK_SET_LIGHT_THRESHOLD);
-            } else {
-                //            os().debug("iSense::%x Could not allocate light sensor", os().id());
-            }
-            if (em_->temp_sensor() != NULL) {
-                em_->temp_sensor()->set_data_handler(this);
-            } else {
-                //            os().debug("iSense::%x Could not allocate temp sensor", os().id());
-            }
-
-            //        os().debug("iSense::%x::enabled em", os().id());
-            em_->enable(true);
-        }
-        debug_->debug("pir");
+        //        debug_->debug("em");
+        //        em_ = new isense::EnvironmentModule(value);
+        //        if (em_ != NULL) {
+        //            if (em_->light_sensor() != NULL) {
+        //                em_->light_sensor()->set_data_handler(this);
+        //                //os().add_task_in(Time(10, 0), this, (void*) TASK_SET_LIGHT_THRESHOLD);
+        //            } else {
+        //                //            os().debug("iSense::%x Could not allocate light sensor", os().id());
+        //            }
+        //            if (em_->temp_sensor() != NULL) {
+        //                em_->temp_sensor()->set_data_handler(this);
+        //            } else {
+        //                //            os().debug("iSense::%x Could not allocate temp sensor", os().id());
+        //            }
+        //
+        //            //        os().debug("iSense::%x::enabled em", os().id());
+        //            em_->enable(true);
+        //        }
+        //        debug_->debug("pir");
         //        pir_ = new isense::PirSensor(value);
         //        // ----- configure PIR sensor -------------
         //        // set this application as the sensor event handler
@@ -193,7 +197,7 @@ public:
         //        // switch on the PIR sensor
         //        pir_->enable();
 
-        
+
 #ifdef CHANGE_POWER
         TxPower power;
         power.set_dB(DB);
@@ -232,14 +236,16 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 10000, 200, 230);
+            //            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 10000, 200, 230);
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
             clustering_algo_.set_join_decision(JD_);
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
-            clustering_algo_.init(routing_, *timer_, *debug_, *rand_, neighbor_discovery, semantics_);
+            clustering_algo_.init(routing_, *timer_, *debug_, *rand_, semantics_);
+
+
 
 
 
@@ -256,14 +262,15 @@ public:
             }
 #endif
 
-            set_semantic(4, 3);
-            set_semantic(5, 3);
-
-
-            set_semantic(211, 0);
-            //            set_semantic(4, 4);
-            //            set_demands(4, 0xff);
-            enable();
+            //            set_semantic(4, 3);
+            //            set_semantic(5, 3);
+            //
+            //
+            //            set_semantic(211, 0);
+            //            //            set_semantic(4, 4);
+            //            set_demands(210, 0);
+            //            set_demands(211, 0);
+            //            enable();
 
 
 
@@ -334,14 +341,23 @@ public:
                         command.set_payload(data[2]);
                         break;
                     case 0x6:
-                        set_semantic(data[2], data[3]);
+                        //set semantic - integer mode
+                        int semantic_id, semantic_value;
+                        memcpy(&semantic_id, data + 2, sizeof (int));
+                        memcpy(&semantic_value, data + 6, sizeof (int));
+                        set_semantic(semantic_id, semantic_value);
                         //command.set_controll_type(ControllMsg_t::CHANGE_K);
                         //command.set_payload(data[2]);
                         break;
                     case 0x7:
+
+                        clustering_algo_.reset_demands();
                         //run a query
-                        for (uint8_t pos = 2; pos + 1 < len; pos += 2) {
-                            set_demands(data[pos], data[pos + 1]);
+                        for (uint8_t pos = 2; pos < len; pos += 2 * sizeof (int)) {
+                            int semantic_id, semantic_value;
+                            memcpy(&semantic_id, data + 2, sizeof (int));
+                            memcpy(&semantic_value, data + 6, sizeof (int));
+                            set_demands(semantic_id, semantic_value);
                         }
                         query();
                         break;
@@ -510,7 +526,7 @@ private:
     void disable() {
         if (!disabled_) {
             debug_->debug("OFF");
-            neighbor_discovery.disable();
+            //            neighbor_discovery.disable();
             clustering_algo_.disable();
             disabled_ = true;
         }
@@ -520,7 +536,7 @@ private:
         if (!disabled_) {
             if ((*rand_)() % 100 < FAILURES_PERCENTAGE) {
                 debug_->debug("Failing;%x", radio_->id());
-                neighbor_discovery.disable();
+                //                neighbor_discovery.disable();
                 clustering_algo_.disable();
                 disabled_ = true;
             }
@@ -543,7 +559,7 @@ private:
 
     void set_semantic(int id, int value) {
         debug_->debug("SS;%d;%d", id, value);
-        semantics_.set_semantic(id, value);
+        semantics_.set_semantic_value(id, value);
     }
 
     void set_demands(int id, int value) {
@@ -551,17 +567,17 @@ private:
         clustering_algo_.set_demands(id, value);
 
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-        //        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-        //        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+        //                semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+        //                semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
     }
 
     void query() {
         clustering_algo_.answer(0);
     }
 
-    nb_t neighbor_discovery;
+    //    nb_t neighbor_discovery;
     routing_t routing_;
-    
+
     bool clustering_enabled_;
 
     bool head_dropped_;
@@ -594,8 +610,8 @@ private:
     semantics_t semantics_;
 
 
-    isense::EnvironmentModule* em_;
-    isense::PirSensor* pir_;
+    //    isense::EnvironmentModule* em_;
+    //    isense::PirSensor* pir_;
 
 
     Os::Timer::self_pointer_t timer_;
