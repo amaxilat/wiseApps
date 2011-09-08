@@ -38,6 +38,7 @@ typedef Os::TxRadio Radio;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
+#include "algorithms/cluster/semantics.h"
 typedef wiselib::Semantics<Os> semantics_t;
 
 // Replace the first Algorithm name with one from the list in comment
@@ -51,7 +52,7 @@ typedef wiselib::Semantics<Os> semantics_t;
 
 typedef wiselib::SemanticClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
 typedef wiselib::SemanticJoinDecision<Os, Radio, semantics_t> JD_t;
-typedef wiselib::FrontsIterator<Os, Radio, semantics_t> IT_t;
+typedef wiselib::SemaIterator<Os, Radio, semantics_t> IT_t;
 typedef wiselib::SpitCore<Os, Radio, CHD_t, JD_t, IT_t, semantics_t> clustering_algo_t;
 #endif
 

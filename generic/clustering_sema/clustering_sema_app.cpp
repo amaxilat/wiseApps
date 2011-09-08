@@ -7,15 +7,14 @@
 #ifdef USE_SENSORS
 #include <isense/modules/environment_module/environment_module.h>
 #include <isense/modules/security_module/pir_sensor.h>
-
-
 #ifdef SHAWN
-
 #endif
 #ifdef ISENSE
 #include "external_interface/isense/isense_light_sensor.h"
 #endif
 #endif
+
+
 
 
 //#include "algorithms/neighbor_discovery/echo.h"
@@ -43,6 +42,20 @@
 
 typedef wiselib::OSMODEL Os;
 
+//#define INTEGER_STORAGE
+#ifdef INTEGER_STORAGE
+#include "algorithms/cluster/semantics.h" 
+typedef wiselib::Semantics<Os> semantics_t;
+#else
+#include "util/allocators/malloc_free_allocator.h"
+#include "util/tuple_store/tuple_store.h"
+#include "algorithms/cluster/spit/tuple_store_adaptor.h"
+typedef wiselib::MallocFreeAllocator<Os> allocator_t;
+typedef wiselib::TupleStore<Os, 3, allocator_t> tuple_store_t;
+typedef wiselib::TupleStoreAdaptor<tuple_store_t> semantics_t;
+#endif
+
+
 
 //#define VIRTUAL_RADIO
 #ifdef VIRTUAL_RADIO
@@ -65,7 +78,7 @@ typedef Os::TxRadio Radio;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
-typedef wiselib::Semantics<Os> semantics_t;
+
 
 // Replace the first Algorithm name with one from the list in comment
 #define SPIT
@@ -78,7 +91,7 @@ typedef wiselib::Semantics<Os> semantics_t;
 
 typedef wiselib::SemanticClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
 typedef wiselib::SemanticJoinDecision<Os, Radio, semantics_t> JD_t;
-typedef wiselib::FrontsIterator<Os, Radio, semantics_t> IT_t;
+typedef wiselib::SemaIterator<Os, Radio, semantics_t> IT_t;
 typedef wiselib::SpitCore<Os, Radio, CHD_t, JD_t, IT_t, semantics_t> clustering_algo_t;
 #endif
 
@@ -219,7 +232,7 @@ public:
 
     void handle_sensor() {
         //        debug_->debug("pir event from node %x", radio_->id());
-        semantics_.set_semantic_value(semantics_t::PIR, 1);
+//        semantics_.set_semantic_value(semantics_t::PIR, 1);
     }
 
     bool is_otap() {
@@ -289,8 +302,8 @@ public:
         //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
         //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-                semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-                semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+//                semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+//                semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
 
         timer_->set_timer<ClusteringFronts,
                 &ClusteringFronts::start > (30000, this, (void *) 1);
@@ -558,7 +571,7 @@ private:
 
     void set_semantic(int id, int value) {
         debug_->debug("SS;%d;%d", id, value);
-        semantics_.set_semantic_value(id, value);
+//        semantics_.set_semantic_value(id, value);
     }
 
     void set_demands(int id, int value) {
@@ -566,8 +579,8 @@ private:
         clustering_algo_.set_demands(id, value);
 
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+//        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+//        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
     }
 
     void query(int i) {
