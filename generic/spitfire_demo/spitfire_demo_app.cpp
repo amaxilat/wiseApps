@@ -69,7 +69,6 @@ public:
     }
 
     //--------------------------------------------------------------
-
     void handle_int8_data(int8 value) {
     }
 
@@ -104,14 +103,24 @@ public:
         debug_->debug("em");
         em_ = new isense::EnvironmentModule(value);
         if (em_ != NULL) {
-            if (em_->light_sensor() != NULL) {
+            if (em_->light_sensor()->enable()) {
+				has_light_sensor_ = true;
                 em_->light_sensor()->set_data_handler(this);
+				//em_->light_sensor()->enable();
                 //os().add_task_in(Time(10, 0), this, (void*) TASK_SET_LIGHT_THRESHOLD);
+				uint32 l = em_->light_sensor()->luminance();
+				if( l < 5000)
+        			semantics_.set_semantic_value(semantics_t::LIGHT, l);
             } else {
                 //            os().debug("iSense::%x Could not allocate light sensor", os().id());
             }
-            if (em_->temp_sensor() != NULL) {
+            if (em_->temp_sensor()->enable()) {
+				has_temp_sensor_ = true;
                 em_->temp_sensor()->set_data_handler(this);
+				//em_->temp_sensor()->enable();
+				int8 t = em_->temp_sensor()->temperature();
+				if(t < 100)
+        		semantics_.set_semantic_value(semantics_t::TEMP, t);
             } else {
                 //            os().debug("iSense::%x Could not allocate temp sensor", os().id());
             }
@@ -147,7 +156,7 @@ public:
 
 
         timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (1000, this, 0);
-
+		//timer_->set_timer<ClusteringFronts, &ClusteringFronts::update_sensors > (1000, this, 0);
     }
 
     void handle_sensor() {
@@ -186,8 +195,16 @@ public:
         }
 
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+		if(has_light_sensor_) {
+			uint32 l = em_->light_sensor()->luminance();
+			if(l < 5000)
+				semantics_.set_semantic_value(semantics_t::LIGHT, l);
+		}
+		if(has_temp_sensor_) {
+			int8 t = em_->temp_sensor()->temperature();
+			if(t < 100)
+				semantics_.set_semantic_value(semantics_t::TEMP, t);
+		}
 
         timer_->set_timer<ClusteringFronts,
                 &ClusteringFronts::start > (30000, this, (void *) 1);
@@ -277,16 +294,36 @@ private:
         clustering_algo_.set_demands(id, value);
 
         //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
+		if(has_light_sensor_) {
+			uint32 l = em_->light_sensor()->luminance();
+			if( l < 5000)
+				semantics_.set_semantic_value(semantics_t::LIGHT, l);
+		}
+		if(has_temp_sensor_) {
+			int8 t = em_->temp_sensor()->temperature();
+			if(t > 0 && t < 100)
+				semantics_.set_semantic_value(semantics_t::TEMP, t);
+		}
     }
 
     void query(int i) {
         clustering_algo_.answer((void *) i);
     }
+	
+/*	
+	void update_sensors(void*) {
+		int8 temp = em_->temp_sensor()->temperature();
+		semantics_.set_semantic_value(semantics_t::TEMP, temp);
+        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
+		debug_->debug("t=%d l=%d\n", temp, em_->light_sensor()->luminance());
+		timer_->set_timer<ClusteringFronts, &ClusteringFronts::update_sensors > (1000, this, 0);
+	}
+*/
+	
     //    routing_t routing_;
 
     bool clustering_enabled_;
+	bool has_light_sensor_, has_temp_sensor_;
 
     bool head_dropped_;
     uint16_t period;

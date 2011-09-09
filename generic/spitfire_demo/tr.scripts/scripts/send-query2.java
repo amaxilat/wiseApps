@@ -100,7 +100,7 @@ import de.uniluebeck.itm.wisebed.cmdlineclient.protobuf.*;
 
 	// Send a message to nodes via uart (to receive them enable RX_UART_MSGS in the fronts_config.h-file)
 	Message msg = new Message();
-	msg.setBinaryData(new byte[]{0xa,0x2,0x8,0,0,0,210}); 
+	msg.setBinaryData(new byte[]{0xa,0x2,0x8,0,0,0,211}); 
 	msg.setSourceNodeId("urn:wisebed:ctitestbed:0xffff");
 	msg.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar)GregorianCalendar.getInstance()));
 
