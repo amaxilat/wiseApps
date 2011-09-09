@@ -138,12 +138,12 @@ public:
             }
 
         //        debug_->debug("pir");
-                pir_ = new isense::PirSensor(value);
-		if (pir_->enable()){
+                //pir_ = new isense::PirSensor(value);
+		/*if (pir_->enable()){
 	                debug_->debug("Pir Sensor is present");
         	    }else{
                 	debug_->debug("No Pir Sensor here");
-		}
+		}*/
         //        // ----- configure PIR sensor -------------
         //        // set this application as the sensor event handler
         //        // --> handle_sensor will be called upon a PIR event
@@ -363,7 +363,7 @@ private:
 
 
     isense::EnvironmentModule* em_;
-        isense::PirSensor* pir_;
+        //isense::PirSensor* pir_;
 
 
     Os::Timer::self_pointer_t timer_;
