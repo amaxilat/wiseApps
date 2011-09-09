@@ -1,0 +1,18 @@
+#!/bin/bash
+BASEDIR=`dirname $0`
+
+if [ "$#" -lt 1 ]
+then
+	echo "Usage $0 PROPERTIES_FILE"
+	echo "Example: $0 live.properties"
+	exit 1
+fi
+
+resKey=$(cat ../resKey)
+
+if [ $1 == "shawn.properties" ]
+then
+resKey="urn:wisebed:ctitestbed:,FFFAB9B48CD84A889A66E91332923716"
+fi
+
+java -Dtestbed.secretreservationkeys=$resKey -jar $BASEDIR/../lib/tr.scripting-client-current.jar -p $1 -f $BASEDIR/../scripts/listen.java -v
