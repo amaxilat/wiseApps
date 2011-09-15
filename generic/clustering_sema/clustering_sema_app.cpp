@@ -7,6 +7,8 @@
 #ifdef USE_SENSORS
 #include <isense/modules/environment_module/environment_module.h>
 #include <isense/modules/security_module/pir_sensor.h>
+#include <isense/modules/core_module/core_module.h>
+
 #ifdef SHAWN
 #endif
 #ifdef ISENSE
@@ -44,6 +46,7 @@ typedef wiselib::OSMODEL Os;
 
 //#define INTEGER_STORAGE
 #ifdef INTEGER_STORAGE
+#define ANSWERING
 #include "algorithms/cluster/semantics.h" 
 typedef wiselib::Semantics<Os> semantics_t;
 #else
@@ -97,6 +100,9 @@ typedef wiselib::SpitCore<Os, Radio, CHD_t, JD_t, IT_t, semantics_t> clustering_
 
 typedef Os::Uart::size_t uart_size_t;
 
+typedef semantics_t::predicate_t predicate_t;
+typedef semantics_t::value_t value_t;
+
 
 
 //#define REMOTE_DEBUG
@@ -116,11 +122,10 @@ typedef wiselib::RemoteDebugModel<Os, Radio, routing_t, flooding_t, Os::Timer> r
 typedef wiselib::ControllMsg<Os, Radio> ControllMsg_t;
 typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
-class ClusteringFronts :
+class ClusteringSema :
 public isense::Uint32DataHandler,
 public isense::Int8DataHandler
-//,public isense::SensorHandler 
-{
+, public isense::SensorHandler {
 public:
 
     void handle_uint32_data(uint32 value) {
@@ -132,8 +137,6 @@ public:
     }
 
     void init(Os::AppMainParameter& value) {
-
-
 
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
         debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
@@ -157,13 +160,14 @@ public:
         radio_->enable_radio();
         //        routing_.init(*radio_, *debug_);
         //        routing_.enable_radio();    
-
         rand_->srand(radio_->id());
 
-        //        radio_->reg_recv_callback<ClusteringFronts, &ClusteringFronts::receive_commands > (this);
+        semantics_.init(tuple_store_);
+        
+        //        radio_->reg_recv_callback<ClusteringSema, &ClusteringSema::receive_commands > (this);
 
-        //clustering_algo_.reg_state_changed_callback<ClusteringFronts, &ClusteringFronts::clustering_events > (this);
-        //neighbor_discovery.reg_event_callback<ClusteringFronts, &ClusteringFronts::nd_callback > (7, nb_t::NEW_NB | nb_t::NEW_NB_BIDI, this);
+        //clustering_algo_.reg_state_changed_callback<ClusteringSema, &ClusteringSema::clustering_events > (this);
+        //neighbor_discovery.reg_event_callback<ClusteringSema, &ClusteringSema::nd_callback > (7, nb_t::NEW_NB | nb_t::NEW_NB_BIDI, this);
 
         //radio_->reg_recv_callback<this, &this::receive_commands > (this);
 
@@ -181,16 +185,21 @@ public:
 #endif
 
 
-        debug_->debug("em");
+        cm_ = new isense::CoreModule(value);
+
         em_ = new isense::EnvironmentModule(value);
         if (em_ != NULL) {
-            if (em_->light_sensor() != NULL) {
+            if (em_->light_sensor()->enable()) {
+                debug_->debug("Light");
+                light_sensor_ = true;
                 em_->light_sensor()->set_data_handler(this);
                 //os().add_task_in(Time(10, 0), this, (void*) TASK_SET_LIGHT_THRESHOLD);
             } else {
                 //            os().debug("iSense::%x Could not allocate light sensor", os().id());
             }
-            if (em_->temp_sensor() != NULL) {
+            if (em_->temp_sensor()->enable()) {
+                debug_->debug("Temp");
+                temp_sensor_ = true;
                 em_->temp_sensor()->set_data_handler(this);
             } else {
                 //            os().debug("iSense::%x Could not allocate temp sensor", os().id());
@@ -198,18 +207,21 @@ public:
 
             //        os().debug("iSense::%x::enabled em", os().id());
             em_->enable(true);
+
         }
         //        debug_->debug("pir");
-        //        pir_ = new isense::PirSensor(value);
-        //        // ----- configure PIR sensor -------------
-        //        // set this application as the sensor event handler
-        //        // --> handle_sensor will be called upon a PIR event
-        //        pir_->set_sensor_handler(this);
-        //        //set the PIR event duration to 2 secs
-        //        pir_->set_pir_sensor_int_interval(2000);
-        //        // switch on the PIR sensor
-        //        pir_->enable();
+        pir_ = new isense::PirSensor(value);
+        if (pir_->enable()) {
+            pir_sensor_ = true;
 
+            // ----- configure PIR sensor -------------
+            // set this application as the sensor event handler
+            // --> handle_sensor will be called upon a PIR event
+            pir_->set_sensor_handler(this);
+            //set the PIR event duration to 2 secs
+            pir_->set_pir_sensor_int_interval(2000);
+
+        }
 
 #ifdef CHANGE_POWER
         TxPower power;
@@ -220,19 +232,32 @@ public:
         //radio_->set_channel(18);
 
 #ifdef ENABLE_UART_CL
-        uart_->reg_read_callback<ClusteringFronts, &ClusteringFronts::handle_uart_msg > (this);
+        uart_->reg_read_callback<ClusteringSema, &ClusteringSema::handle_uart_msg > (this);
         uart_->enable_serial_comm();
 #endif
 
 
+        //        if (uart_->enabled() == 0) {
+        //            cm_->led_on();
+        //        }
 
-        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (1000, this, 0);
+
+        timer_->set_timer<ClusteringSema, &ClusteringSema::start > (1000, this, 0);
 
     }
 
     void handle_sensor() {
         //        debug_->debug("pir event from node %x", radio_->id());
-//        semantics_.set_semantic_value(semantics_t::PIR, 1);
+        if (pir_sensor_) {
+#ifdef INTEGER_STORAGE
+            int pir = semantics_t::PIR, value = 1;
+            predicate_t pir_p;
+            pir_p.set_data(&pir);
+            value_t value_p;
+            value_p.set_data(&value);
+            semantics_.set_semantic_value(pir_p, value_p);
+#endif
+        }
     }
 
     bool is_otap() {
@@ -301,12 +326,34 @@ public:
 
         //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
         //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
-        //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-//                semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-//                semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
 
-        timer_->set_timer<ClusteringFronts,
-                &ClusteringFronts::start > (30000, this, (void *) 1);
+#ifdef INTEGER_STORAGE
+        predicate_t predicate_p;
+
+        value_t value_p;
+
+        if (pir_sensor_) {
+            int pir = semantics_t::PIR, value = 0;
+            predicate_p.set_data(&pir);
+            value_p.set_data(&value);
+            semantics_.set_semantic_value(predicate_p, value_p);
+        }
+        if (light_sensor_) {
+            int light = semantics_t::LIGHT, value = em_->light_sensor()->luminance();
+            predicate_p.set_data(&light);
+            value_p.set_data(&value);
+            semantics_.set_semantic_value(predicate_p, value_p);
+        }
+        if (temp_sensor_) {
+            int temp = semantics_t::TEMP, value = em_->temp_sensor()->temperature();
+            predicate_p.set_data(&temp);
+            value_p.set_data(&value);
+            semantics_.set_semantic_value(predicate_p, value_p);
+        }
+#endif
+
+        timer_->set_timer<ClusteringSema,
+                &ClusteringSema::start > (30000, this, (void *) 1);
 
     }
 
@@ -346,7 +393,7 @@ public:
                         int semantic_id, semantic_value;
                         memcpy(&semantic_id, data + 2, sizeof (int));
                         memcpy(&semantic_value, data + 6, sizeof (int));
-                        set_semantic(semantic_id, semantic_value);
+                        set_semantic((block_data_t*) & semantic_id, (block_data_t*) & semantic_value);
                         //command.set_controll_type(ControllMsg_t::CHANGE_K);
                         //command.set_payload(data[2]);
                         break;
@@ -569,22 +616,24 @@ private:
         //        clustering_algo_.set_maxhops(k);
     }
 
-    void set_semantic(int id, int value) {
-        debug_->debug("SS;%d;%d", id, value);
-//        semantics_.set_semantic_value(id, value);
+    void set_semantic(block_data_t* id, block_data_t* value) {
+#ifdef INTEGER_STORAGE
+        predicate_t pred = predicate_t(id);
+        value_t val = value_t(value);
+        debug_->debug("SS;%s;%s", pred.c_str(), val.c_str());
+        semantics_.set_semantic_value(pred, val);
+
+#else 
+#endif
     }
 
     void set_demands(int id, int value) {
         debug_->debug("SD;%d;%d", id, value);
         clustering_algo_.set_demands(id, value);
-
-        //        semantics_.set_semantic_value(semantics_t::PIR, 0);
-//        semantics_.set_semantic_value(semantics_t::LIGHT, em_->light_sensor()->luminance());
-//        semantics_.set_semantic_value(semantics_t::TEMP, em_->temp_sensor()->temperature());
     }
 
     void query(int i) {
-        clustering_algo_.answer((void *) i);
+        clustering_algo_.answer(i);
     }
 
     //    nb_t neighbor_discovery;
@@ -619,11 +668,16 @@ private:
     clustering_algo_t clustering_algo_;
     bool disabled_;
 
+#ifndef INTEGER_STORAGE
+    tuple_store_t tuple_store_;
+#endif
     semantics_t semantics_;
 
+    bool light_sensor_, temp_sensor_, pir_sensor_;
+    isense::CoreModule* cm_;
+    isense::EnvironmentModule* em_;
+    isense::PirSensor* pir_;
 
-        isense::EnvironmentModule* em_;
-    //    isense::PirSensor* pir_;
 
 
     Os::Timer::self_pointer_t timer_;
@@ -635,7 +689,7 @@ private:
     Os::Rand::self_pointer_t rand_;
 };
 // --------------------------------------------------------------------------
-wiselib::WiselibApplication<Os, ClusteringFronts> example_app;
+wiselib::WiselibApplication<Os, ClusteringSema> example_app;
 // --------------------------------------------------------------------------
 
 void application_main(Os::AppMainParameter& value) {
