@@ -44,7 +44,7 @@
 
 typedef wiselib::OSMODEL Os;
 
-//#define INTEGER_STORAGE
+#define INTEGER_STORAGE
 #ifdef INTEGER_STORAGE
 #define ANSWERING
 #include "algorithms/cluster/semantics.h" 
@@ -161,8 +161,7 @@ public:
         //        routing_.init(*radio_, *debug_);
         //        routing_.enable_radio();    
         rand_->srand(radio_->id());
-
-        semantics_.init(tuple_store_);
+        
         
         //        radio_->reg_recv_callback<ClusteringSema, &ClusteringSema::receive_commands > (this);
 
@@ -668,9 +667,6 @@ private:
     clustering_algo_t clustering_algo_;
     bool disabled_;
 
-#ifndef INTEGER_STORAGE
-    tuple_store_t tuple_store_;
-#endif
     semantics_t semantics_;
 
     bool light_sensor_, temp_sensor_, pir_sensor_;
