@@ -44,18 +44,18 @@
 
 typedef wiselib::OSMODEL Os;
 
-#define INTEGER_STORAGE
+//#define INTEGER_STORAGE
 #ifdef INTEGER_STORAGE
 #define ANSWERING
 #include "algorithms/cluster/semantics.h" 
 typedef wiselib::Semantics<Os> semantics_t;
 #else
 #include "util/allocators/malloc_free_allocator.h"
-#include "util/tuple_store/tuple_store.h"
+//#include "util/tuple_store/tuple_store2.h"
 #include "algorithms/cluster/spit/tuple_store_adaptor.h"
 typedef wiselib::MallocFreeAllocator<Os> allocator_t;
-typedef wiselib::TupleStore<Os, 3, allocator_t> tuple_store_t;
-typedef wiselib::TupleStoreAdaptor<tuple_store_t> semantics_t;
+//typedef wiselib::TupleStore<Os, 3, allocator_t> tuple_store_t;
+typedef wiselib::TupleStoreAdaptor<Os, allocator_t> semantics_t;
 #endif
 
 
