@@ -8,12 +8,15 @@
 #include "algorithms/cluster/clustering_types.h"
 
 // Replace the first Algorithm name with one from the list in comment
-#define FRONTS //FRONTS MOCA
+#define LCA //FRONTS MOCA LCA
 #ifdef FRONTS
 #include "algorithms/cluster/fronts/fronts_core.h"
 #endif
 #ifdef MOCA
 #include "algorithms/cluster/moca/moca.h"
+#endif
+#ifdef LCA
+#include "algorithms/cluster/lca/lca.h"
 #endif
 
 
@@ -61,6 +64,12 @@ typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> CHD_t;
 typedef wiselib::MocaJoinDecision<Os, Radio> JD_t;
 typedef wiselib::OverlappingIterator<Os, Radio> IT_t;
 typedef wiselib::MocaCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
+#endif
+#ifdef LCA
+typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> CHD_t;
+typedef wiselib::BfsJoinDecision<Os,Radio> JD_t;
+typedef wiselib::FrontsIterator<Os,Radio> IT_t;
+typedef wiselib::LcaCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
 #endif
 
 typedef Os::Uart::size_t uart_size_t;
@@ -221,7 +230,7 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 10000, 180, 200);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 15000, 180, 220);
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
@@ -230,11 +239,13 @@ public:
             clustering_algo_.set_iterator(IT_);
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery);
 
-            clustering_algo_.set_maxhops(3);
+            clustering_algo_.set_maxhops(2);
 #ifdef MOCA
             clustering_algo_.set_probability(40);
 #endif
-
+#ifdef LCA
+            clustering_algo_.set_probability(20);
+#endif
             //debug_->debug("ON");
             disabled_ = true;
             //neighbor_discovery.enable();
@@ -243,15 +254,15 @@ public:
 #ifdef VISUALIZER
             if (!is_otap()) {
                 neighbor_discovery.register_debug_callback(0);
-                //clustering_algo_.register_debug_callback();
+                clustering_algo_.register_debug_callback();
             }
 #endif
-            enable();
+            //enable();
 
         } else {
             //            debug_->debug("NBsize %d", neighbor_discovery.stable_nb_size());
             //            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
-            clustering_algo_.present_neighbors();
+            //clustering_algo_.present_neighbors();
 
 
             //            if (!is_gateway()) {
@@ -465,7 +476,7 @@ private:
         if (disabled_) {
             debug_->debug("ON");
             neighbor_discovery.enable();
-            clustering_algo_.enable(20);
+            clustering_algo_.enable(40);
             disabled_ = false;
         }
     }
