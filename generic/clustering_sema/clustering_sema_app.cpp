@@ -44,7 +44,7 @@
 
 typedef wiselib::OSMODEL Os;
 
-//#define INTEGER_STORAGE
+#define INTEGER_STORAGE
 #ifdef INTEGER_STORAGE
 #define ANSWERING
 #include "algorithms/cluster/semantics.h" 
@@ -161,8 +161,8 @@ public:
         //        routing_.init(*radio_, *debug_);
         //        routing_.enable_radio();    
         rand_->srand(radio_->id());
-        
-        
+
+
         //        radio_->reg_recv_callback<ClusteringSema, &ClusteringSema::receive_commands > (this);
 
         //clustering_algo_.reg_state_changed_callback<ClusteringSema, &ClusteringSema::clustering_events > (this);
@@ -250,10 +250,8 @@ public:
         if (pir_sensor_) {
 #ifdef INTEGER_STORAGE
             int pir = semantics_t::PIR, value = 1;
-            predicate_t pir_p;
-            pir_p.set_data(&pir);
-            value_t value_p;
-            value_p.set_data(&value);
+            predicate_t pir_p = predicate_t((block_data_t*) & pir, sizeof (int));
+            value_t value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(pir_p, value_p);
 #endif
         }
@@ -333,20 +331,20 @@ public:
 
         if (pir_sensor_) {
             int pir = semantics_t::PIR, value = 0;
-            predicate_p.set_data(&pir);
-            value_p.set_data(&value);
+            predicate_p = predicate_t((block_data_t*) & pir, sizeof (int));
+            value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(predicate_p, value_p);
         }
         if (light_sensor_) {
             int light = semantics_t::LIGHT, value = em_->light_sensor()->luminance();
-            predicate_p.set_data(&light);
-            value_p.set_data(&value);
+            predicate_p = predicate_t((block_data_t*) & light, sizeof (int));
+            value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(predicate_p, value_p);
         }
         if (temp_sensor_) {
             int temp = semantics_t::TEMP, value = em_->temp_sensor()->temperature();
-            predicate_p.set_data(&temp);
-            value_p.set_data(&value);
+            predicate_p = predicate_t((block_data_t*) & temp, sizeof (int));
+            value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(predicate_p, value_p);
         }
 #endif
@@ -399,24 +397,23 @@ public:
                     case 0x7:
 
                         clustering_algo_.reset_demands();
-                        //run a query
-                        for (uint8_t pos = 2; pos < len; pos += 2 * sizeof (int)) {
-                            int semantic_id, semantic_value;
-                            memcpy(&semantic_id, data + pos, sizeof (int));
-                            memcpy(&semantic_value, data + pos + 4, sizeof (int));
-                            set_demands(semantic_id, semantic_value);
+                        if (data[3] == 1) {
+                            //run a query
+                            for (uint8_t pos = 3; pos < len; pos += 2 * sizeof (int)) {
+                                set_demands(data + pos, sizeof (int), data + pos + 4, sizeof (int));
+                            }
                         }
                         query(0);
                         break;
                     case 0x8:
                         clustering_algo_.reset_demands();
                         //run a query
-                        for (uint8_t pos = 2; pos < len; pos += 1 * sizeof (int)) {
-                            int semantic_id, semantic_value;
-                            memcpy(&semantic_id, data + pos, sizeof (int));
-                            semantic_value = 1;
-                            set_demands(semantic_id, semantic_value);
-                        }
+                        //                        for (uint8_t pos = 2; pos < len; pos += 1 * sizeof (int)) {
+                        //                            int semantic_id, semantic_value;
+                        //                            memcpy(&semantic_id, data + pos, sizeof (int));
+                        //                            semantic_value = 1;
+                        //                            set_demands(semantic_id, semantic_value);
+                        //                        }
                         query(1);
                         break;
 
@@ -626,9 +623,9 @@ private:
 #endif
     }
 
-    void set_demands(int id, int value) {
+    void set_demands(block_data_t* id, size_t id_size, block_data_t* value, size_t value_size) {
         debug_->debug("SD;%d;%d", id, value);
-        clustering_algo_.set_demands(id, value);
+        clustering_algo_.set_demands(id, id_size, value, value_size);
     }
 
     void query(int i) {
