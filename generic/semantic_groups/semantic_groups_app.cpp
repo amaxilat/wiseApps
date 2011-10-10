@@ -26,7 +26,7 @@ typedef wiselib::OSMODEL Os;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::block_data_t block_data_t;
 
-//#define VIRTUAL_RADIO
+#define VIRTUAL_RADIO
 #ifdef VIRTUAL_RADIO
 #include "util/wisebed_node_api/virtual_extended_txradio.h"
 #include "util/base_classes/routing_base.h"
@@ -70,7 +70,7 @@ typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug
 
 
 #ifdef GROUP
-typedef wiselib::GroupClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
+typedef wiselib::NothingClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
 typedef wiselib::GroupJoinDecision<Os, Radio, semantics_t> JD_t;
 typedef wiselib::GroupIterator<Os, Radio, semantics_t> IT_t;
 typedef wiselib::GroupCore<Os, Radio, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
@@ -142,7 +142,7 @@ public:
 #endif
 
 
-        cm_ = new isense::CoreModule(value);
+
 
         em_ = new isense::EnvironmentModule(value);
         if (em_ != NULL) {
@@ -186,7 +186,7 @@ public:
         radio_->set_power(power);
 #endif
 
-        //        radio_->set_channel(12);
+        radio_->set_channel(15);
 
 #ifdef ENABLE_UART_CL
         uart_->reg_read_callback<SemanticGroupsApp, &SemanticGroupsApp::handle_uart_msg > (this);
@@ -198,9 +198,24 @@ public:
         timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (1000, this, 0);
 
 
-        neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 3000, 15000, 200, 230);
-        neighbor_discovery.register_debug_callback(0);
-        neighbor_discovery.enable();
+        if ((radio_->id() >= 400) && (radio_->id() < 431)) {
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2500, 15000, 150, 255);
+        } else {
+
+            switch (radio_->id()) {
+                case 0x9710: case 0x1b7f: case 0x99ad: case 0x96e5: case 0x999d: case 0x1b95: case 0x15d3: case 0x9731: case 0x96c2: case 0x9700: case 0x1725: case 0x96fc: case 0x96f4: case 0x99bd: case 0x15e0: case 0x1b3b: case 0x1520: case 0x1b4c: case 0x1cb9: case 0x1b84: case 0x9708: case 0x96e0: case 0x9a0d: case 0x1b99: case 0x96eb: case 0x1be5: case 0x9a0c:
+                    neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2500, 15000, 150, 255);
+                    break;
+                default:
+                    neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2500, 15000, 200, 255);
+            }
+
+
+
+
+        }
+        neighbor_discovery.register_debug_callback(nb_t::NEW_NB_BIDI | nb_t::DROPPED_NB | nb_t::LOST_NB_BIDI);
+        //        neighbor_discovery.enable();
     }
 
     void handle_sensor() {
@@ -271,7 +286,7 @@ public:
             value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(predicate_p, value_p);
         }
-         if (light_sensor_) {
+        if (light_sensor_) {
             int light = semantics_t::LIGHT, value = em_->light_sensor()->luminance();
             predicate_p = predicate_t((block_data_t*) & light, sizeof (int));
             value_p = value_t((block_data_t*) & value, sizeof (int));
@@ -353,8 +368,8 @@ private:
     void enable() {
         if (disabled_) {
             debug_->debug("ON");
-            //            neighbor_discovery.enable();
-            clustering_algo_.enable(5);
+            neighbor_discovery.enable();
+            clustering_algo_.enable(120);
             disabled_ = false;
         }
     }
@@ -423,7 +438,7 @@ private:
     semantics_t semantics_;
 
     bool light_sensor_, temp_sensor_, pir_sensor_;
-    isense::CoreModule* cm_;
+
     isense::EnvironmentModule* em_;
     isense::PirSensor* pir_;
 
