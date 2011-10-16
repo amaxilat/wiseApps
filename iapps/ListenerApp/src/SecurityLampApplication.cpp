@@ -81,7 +81,7 @@ boot() {
     
     //add receiver
     os().dispatcher().add_receiver(this);
-	chan=11;
+	chan=18;
 	//change channel
 	os().radio().hardware_radio().set_channel(chan);
 	os().debug("channel:%d",chan);
