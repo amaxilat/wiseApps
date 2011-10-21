@@ -15,18 +15,18 @@ class TestbedConfigGenerator {
     private final String wiseMLFilename;
     private final String XMLFilename;
 
-    private final Testbed testbed;
+    private final CsvTestbed csvTestbed;
     private String portalHostname;
 
 
-    TestbedConfigGenerator(String testbed_name, Testbed testbed) {
+    TestbedConfigGenerator(String testbed_name, CsvTestbed csvTestbed) {
 
         HostsFilename = "testbeds/" + testbed_name + "/hosts";
         portalFile = "testbeds/" + testbed_name + "/portal.csv";
         testbedSetupFile = "testbeds/" + testbed_name + "/testbed-setup.csv";
         wiseMLFilename = "testbeds/" + testbed_name + "/conf/tr.iwsn-wiseml.xml";
         XMLFilename = "testbeds/" + testbed_name + "/conf/tr.iwsn-testbed.xml";
-        this.testbed = testbed;
+        this.csvTestbed = csvTestbed;
     }
 
     void createWiseML() {
@@ -43,9 +43,9 @@ class TestbedConfigGenerator {
 
 
         //add nodes description
-        for (String nodeId : testbed.getNodes()) {
-            final Node currentNode = testbed.getNode(nodeId);
-            WISEMLoutput.append(currentNode.toDeviceWiseml());
+        for (String nodeId : csvTestbed.getNodes()) {
+            final CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
+            WISEMLoutput.append(currentCsvNode.toDeviceWiseml());
         }
 
         WISEMLoutput.append(""
@@ -128,8 +128,8 @@ class TestbedConfigGenerator {
         log.info("================Hosts Info =================");
 
         log.info("Already added devices for " + portalHostname);
-        for (String hostname : testbed.getHosts()) {
-            final Host currentHost = testbed.getHost(hostname);
+        for (String hostname : csvTestbed.getHosts()) {
+            final Host currentHost = csvTestbed.getHost(hostname);
             //do not add the portal serve
             if (currentHost.hostname().equals(portalHostname)) {
                 continue;
@@ -142,10 +142,10 @@ class TestbedConfigGenerator {
             XMLoutput.append("\t<nodes id=\"" + currentHost.hostname() + "\">\n"
                     + "\t\t<names>\n");
 
-            for (String nodeId : testbed.getNodes()) {
-                final Node currentNode = testbed.getNode(nodeId);
-                if (currentHost.hostname().equals(currentNode.hostname())) {
-                    XMLoutput.append(currentNode.toNodeNameXml());
+            for (String nodeId : csvTestbed.getNodes()) {
+                final CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
+                if (currentHost.hostname().equals(currentCsvNode.hostname())) {
+                    XMLoutput.append(currentCsvNode.toNodeNameXml());
                 }
             }
 
@@ -157,14 +157,14 @@ class TestbedConfigGenerator {
                     + "\t\t<applications>\n");
 
 
-            for (String nodeId : testbed.getNodes()) {
-                final Node currentNode = testbed.getNode(nodeId);
-                if (currentHost.hostname().equals(currentNode.hostname())) {
-                    log.info("\t\tdevice:" + currentNode.id() + "\ttype:"
-                            + currentNode.type());
+            for (String nodeId : csvTestbed.getNodes()) {
+                final CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
+                if (currentHost.hostname().equals(currentCsvNode.hostname())) {
+                    log.info("\t\tdevice:" + currentCsvNode.id() + "\ttype:"
+                            + currentCsvNode.type());
 
 
-                    XMLoutput.append(currentNode.toDeviceXml());
+                    XMLoutput.append(currentCsvNode.toDeviceXml());
 
                 }
             }
@@ -176,7 +176,7 @@ class TestbedConfigGenerator {
 
 
         }
-        XMLoutput.append("</ns2:testbed>\n");
+        XMLoutput.append("</ns2:csvTestbed>\n");
 
         save2file(XMLFilename, XMLoutput.toString());
 
@@ -219,7 +219,7 @@ class TestbedConfigGenerator {
 
             XMLoutput.append(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-                            + "<ns2:testbed xmlns:ns2=\"http://itm.uniluebeck.de/tr/xml\" "
+                            + "<ns2:csvTestbed xmlns:ns2=\"http://itm.uniluebeck.de/tr/xml\" "
                             + "xmlns:ns4=\"http://itm.uniluebeck.de/tr/runtime/wsnapp/xml\" "
                             + "xmlns:ns3=\"http://itm.uniluebeck.de/tr/runtime/portalapp/xml\">\n"
                             + "\t<nodes id=\"" + portalHostname + "\">\n"
@@ -227,10 +227,10 @@ class TestbedConfigGenerator {
                             + "\t\t\t<nodename name=\"" + name + "\"/>\n");
 
 
-            for (String nodeId : testbed.getNodes()) {
-                Node currentNode = testbed.getNode(nodeId);
-                if (currentNode.hostname().equals(portalHostname)) {
-                    XMLoutput.append(currentNode.toNodeNameXml());
+            for (String nodeId : csvTestbed.getNodes()) {
+                CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
+                if (currentCsvNode.hostname().equals(portalHostname)) {
+                    XMLoutput.append(currentCsvNode.toNodeNameXml());
                 }
             }
 
@@ -260,14 +260,14 @@ class TestbedConfigGenerator {
                             + "\t\t\t\t\t<port>1234</port>\n"
                             + "\t\t\t\t</sc:socketconnector>\n"
                             + "\t\t\t</application>\n");
-            for (String nodeId : testbed.getNodes()) {
-                Node currentNode = testbed.getNode(nodeId);
-                if (currentNode.hostname().equals(portalHostname)) {
-                    log.info("\t\tdevice:" + currentNode.id() + "\ttype:"
-                            + currentNode.type());
+            for (String nodeId : csvTestbed.getNodes()) {
+                CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
+                if (currentCsvNode.hostname().equals(portalHostname)) {
+                    log.info("\t\tdevice:" + currentCsvNode.id() + "\ttype:"
+                            + currentCsvNode.type());
 
 
-                    XMLoutput.append(currentNode.toDeviceXml());
+                    XMLoutput.append(currentCsvNode.toDeviceXml());
 
                 }
             }
@@ -284,8 +284,8 @@ class TestbedConfigGenerator {
 
 
         StringBuilder HostsOutput = new StringBuilder();
-        for (String hostname : testbed.getHosts()) {
-            Host currentHost = testbed.getHost(hostname);
+        for (String hostname : csvTestbed.getHosts()) {
+            Host currentHost = csvTestbed.getHost(hostname);
             if (currentHost.host_addr().equals("")) {
             } else if (currentHost.host_addr().equals("null")) {
             } else {

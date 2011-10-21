@@ -10,7 +10,7 @@ public class Main {
 
     private static final Logger log = Logger.getLogger(Main.class);
 
-    private static Testbed testbed;
+    private static CsvTestbed csvTestbed;
 
 
     /**
@@ -20,7 +20,7 @@ public class Main {
 
 
         if (args.length < 1) {
-            log.error("Error needs The name of the testbed as Argument!");
+            log.error("Error needs The name of the csvTestbed as Argument!");
             return;
         }
 
@@ -46,15 +46,15 @@ public class Main {
 
     private static void updateWiseDB(String testbed_name) {
         init(testbed_name);
-        WisedbUpdater wisedbUpdater = new WisedbUpdater(testbed_name, testbed);
-        log.info("Updating wiseDB for Testbed: " + testbed_name);
+        WisedbUpdater wisedbUpdater = new WisedbUpdater(testbed_name, csvTestbed);
+        log.info("Updating wiseDB for CsvTestbed: " + testbed_name);
     }
 
     private static void createConfiguration(String testbed_name) {
 
         init(testbed_name);
         log.info("Creating xml files for Testbed: " + testbed_name);
-        TestbedConfigGenerator testbedConfigGenerator = new TestbedConfigGenerator(testbed_name, testbed);
+        TestbedConfigGenerator testbedConfigGenerator = new TestbedConfigGenerator(testbed_name, csvTestbed);
 
         //BUILDING TESTBED.xml
 
@@ -71,6 +71,6 @@ public class Main {
 
         String inFile = "testbeds/" + testbed_name + "/nodes.csv";
         String testbedSetupFile = "testbeds/" + testbed_name + "/testbed-setup.csv";
-        testbed = new Testbed(inFile, testbedSetupFile);
+        csvTestbed = new CsvTestbed(inFile, testbedSetupFile);
     }
 }
