@@ -1,0 +1,15 @@
+if [ "$#" -lt 1 ]
+then
+	./reset ../gold.properties > tmp
+else
+	./reset ../gold.properties urn:wisebed:ctitestbed:0x$1 > tmp
+fi
+
+a=$(grep -e "(error)" tmp | wc -l);
+b=$(grep -e "(done)" tmp | wc -l);
+if [ $(grep -e "false" tmp | wc -l) -eq 0 ]
+then
+	echo "$b DONE"
+else
+	echo "$a FAILED $b DONE"
+fi

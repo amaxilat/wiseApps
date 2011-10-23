@@ -1,0 +1,210 @@
+import java.util.*;
+import java.nio.*;
+
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import eu.wisebed.testbed.api.rs.RSServiceHelper;
+import eu.wisebed.api.rs.PublicReservationData;
+import eu.wisebed.api.rs.RS;
+
+import eu.wisebed.api.snaa.SNAA;
+import eu.wisebed.api.snaa.AuthenticationTriple;
+import eu.wisebed.api.snaa.SecretAuthenticationKey;
+import eu.wisebed.testbed.api.snaa.helpers.SNAAServiceHelper;
+
+import eu.wisebed.testbed.api.wsn.WSNServiceHelper;
+import eu.wisebed.api.controller.*;
+import eu.wisebed.api.common.*;
+import eu.wisebed.api.sm.*;
+import eu.wisebed.api.wsn.*;
+
+import de.uniluebeck.itm.tr.util.*;
+import de.itm.uniluebeck.tr.wiseml.WiseMLHelper;
+
+import de.uniluebeck.itm.wisebed.cmdlineclient.*;
+import de.uniluebeck.itm.wisebed.cmdlineclient.wrapper.*;
+import java.util.concurrent.Future;
+import com.google.common.collect.*;
+
+import de.uniluebeck.itm.wisebed.cmdlineclient.protobuf.*;
+
+//--------------------------------------------------------------------------
+// Configuration
+//--------------------------------------------------------------------------
+
+	String secretReservationKeys = System.getProperty("testbed.secretreservationkeys");
+	String sessionManagementEndpointURL	= System.getProperty("testbed.sm.endpointurl");
+	//String nodeUrnsToReset = System.getProperty("testbed.nodeurns");
+
+	String pccHost = System.getProperty("testbed.protobuf.hostname");
+	Integer pccPort = Integer.parseInt(System.getProperty("testbed.protobuf.port"));
+
+	SessionManagement sessionManagement = WSNServiceHelper.getSessionManagementService(sessionManagementEndpointURL);
+
+//--------------------------------------------------------------------------
+// Application logic
+//--------------------------------------------------------------------------
+
+	String wsnEndpointURL = null;
+	try {
+		wsnEndpointURL = sessionManagement.getInstance(
+				helper.parseSecretReservationKeys(secretReservationKeys),
+				"NONE"
+		);
+	} catch (UnknownReservationIdException_Exception e) {
+		log.warn("There was not reservation found with the given secret reservation key. Exiting.");
+		System.exit(1);
+	}
+
+	log.info("Got a WSN instance URL, endpoint is: {}", wsnEndpointURL);
+	WSN wsnService = WSNServiceHelper.getWSNService(wsnEndpointURL);
+	final WSNAsyncWrapper wsn = WSNAsyncWrapper.of(wsnService);
+
+	ProtobufControllerClient pcc = ProtobufControllerClient.create(pccHost, pccPort, helper.parseSecretReservationKeys(secretReservationKeys));
+	pcc.addListener(new ProtobufControllerClientListener() {
+		public void receive(List msg) {
+			// nothing to do
+		}
+		public void receiveStatus(List requestStatuses) {
+			wsn.receive(requestStatuses);
+		}
+		public void receiveNotification(List msgs) {
+			for (int i=0; i<msgs.size(); i++) {
+				log.info(msgs.get(i));
+			}
+		}
+		public void experimentEnded() {
+			log.info("Experiment ended");
+			System.exit(0);
+		}
+		public void onConnectionEstablished() {
+			log.debug("Connection established.");
+		}
+		public void onConnectionClosed() {
+			log.debug("Connection closed.");
+		}
+	});
+	pcc.connect();
+/*
+String tbed_prefix= "urn:wisebed:tubs:";
+String[] nodeUrns4Semantics= new String [] {
+"401,402,403,404,405",
+"406,407,408,409,410",
+"411,412,413,414,425",
+"416,417,418,419,420",
+"421,412,423,424,425",
+"426,417,428,429,430"};
+int[] semantics = new int [] {4,4,4,4,4,4};
+int[] values = new int [] {1,2,3,4,5,6};
+*/
+
+/*
+ * 	String[] nodeUrns4Semantics= new String [] {"0x9979,0x153d,0x1c98,0xcaa",
+	"0x295,0x1b77",
+	"0xca3,0x1cde",
+	"0x296",
+	"0x585,0x786a",
+	"0x296,0x1c98,0x295,0x1b77,0x9979,0x153d,0x585,0x786a,0xca3,0x1cde,0xcaa",
+ * */
+
+	String[] nodeUrns4Semantics= new String [] {"0x9979,0x153d,0xcaa",
+	//"0x9979,0x153d,0xcaa",
+	//"0x295,0x1b77",
+	//"0xca3,0x1cde",
+	//"0x296",
+	//"0x585,0x786a",
+	//"0x296,0x1c98,0x295,0x1b77,0x9979,0x153d,0x585,0x786a,0xca3,0x1cde,0xcaa",
+//	"0x296,0x1c98,0x295,0x1b77,0x9979,0x153d,0x585,0x786a,0xca3,0x1cde,0xcaa",
+//	"0x296,0x1c98,0x295,0x1b77,0x9979,0x153d,0x585,0x786a,0xca3,0x1cde,0xcaa",
+	//"0x296,0x9979,0x1c98",
+	//"0x296,0x1c98,0x295,0x1b77,0x9979,0x153d,0x585,0x786a,0xca3,0x1cde,0xcaa,0x1ccd",
+	//"0x296,0x1c98,0x295,0x1b77,0x153d,0x585,0x786a,0xca3,0x1cde,0xcaa,0x1ccd,",
+	//"0x9979"
+	};
+	int[] semantics = new int [] {4,5,4,4,4,2,3,1};
+	int[] values = new int [] {1,2,3,4,5,0,1,0};
+	String tbed_prefix= "urn:wisebed:ctitestbed:";
+/*
+	String[] nodeUrns4SemanticsUZL= new String [] {"0x61e1,0xf7b7,0x61e5,0x997e,0x99a8,0x1bb3",
+	"0x14f7,0x96f9,0xc179,0xcc3a,0x85a4,0x80f5",
+	"0x971e,0x9995,0x96df",
+	"0xcc43,0x7e6c,0x1cd2",
+	"0xcc33,0x5a34,0xcf04",
+	"0x85ba,0x9960,0x9961",
+	"0x99af,0x753d,0x1b57",
+	"0x1bb0,0x1bd8,0x1c2c",
+	"0x1b5a,0x1b6b,0x970b",
+	"0x1c72,0xf851,0xcff1",
+	"0x5980,0x1721,0x96f0",
+	"0x14e2,0xf85d,0x1cca",
+	"0x1234,0x14e0,0xcbe5",
+	"0x151f,0x1c6c,0x1c73",
+	"0xcc3d,0x1b74,0x5a35,0x599d,0xcbe4,0xf859",
+	"0x997e,0x14e2,0x5a34,0xcc33,0x151f,0x1c73,0xf7b7,0x61e5,0x1bd8,0x1bb0,0xcc3a,0x85a4,0x99af,0x1b74,0x1b5a,0xf851,0x1cd2,0xcc43,0x9960,0x14f7,0xc179,0x96df,0x9995,0xcbe5,0x1234",//0x5980,0x1b57
+	"0x997e,0x14e2,0x5a34,0xcc33,0x151f,0x1c73,0xf7b7,0x61e5,0x1bd8,0x1bb0,0xcc3a,0x85a4,0x99af,0x1b74,0x1b5a,0xf851,0x1cd2,0xcc43,0x9960,0x14f7,0xc179,0x96df,0x9995,0xcbe5,0x1234",//0x5980,0x1b57
+	"0x1bb3,0x99a8,0x1cca,0xf85d,0xcf04,0x1c6c,0x61e1,0x1c2c,0x80f5,0x599d,0xcbe4,0xf859,0x753d,0x5a35,0xcc3d,0x970b,0x1b6b,0x1c72,0xcff1,0x7e6c,0x85ba,0x9961,0x96f9,0x971e,0x14e0,0x96f0,0x1721",
+	"0x1bb0,0x1bd8,0x1c2c,0x99af,0x753d,0x1b57,0x85ba,0x9960,0x9961,0xcf04,0xcc33,0x5a34,0xcc43,0x7e6c,0x1cd2,0x96df,0x9995,0x971e,0x80f5,0x85a4,0xcc3a,0x14f7,0x96f9,0xc179,0x1bb3,0x99a8,0x997e,0x61e1,0xf7b7,0x61e5",
+	"0xf859,0xcbe4,0x599d,0x1b74,0x5a35,0xcc3d,0x1c73,0x1c6c,0x151f,0x1234,0xcbe5,0x14e0,0x1cca,0xf85d,0x14e2,0x96f0,0x1721,0x5980,0xcff1,0xf851,0x1c72,0x970b,0x1b6b,0x1b5a"
+	};
+	int[] semanticsUZL = new int [] {4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,210,211};
+	int[] valuesUZL = new int [] {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0,0};
+	String tbed_prefix= "urn:wisebed:uzl1:";
+	* */
+
+
+	
+	//String nodeUrnsToReset = "urn:wisebed:ctitestbed:0x1ccd,urn:wisebed:ctitestbed:0x296,urn:wisebed:ctitestbed:0xcaa,urn:wisebed:ctitestbed:0x1c98,urn:wisebed:ctitestbed:0x295,urn:wisebed:ctitestbed:0x1b77,urn:wisebed:ctitestbed:0x9979,urn:wisebed:ctitestbed:0x153d,urn:wisebed:ctitestbed:0x585,urn:wisebed:ctitestbed:0x786a,urn:wisebed:ctitestbed:0xca3,urn:wisebed:ctitestbed:0x1cde";	
+	for (int i=0;i<nodeUrns4Semantics.length;i++){
+		// retrieve reserved node URNs from testbed
+		List nodeURNs;
+		nurn = nodeUrns4Semantics[i].split(",");
+		for (int j=0;j<nurn.length;j++){
+			nurn[j]=tbed_prefix+nurn[j];
+		}
+		nodeURNs = Lists.newArrayList(nurn);
+		log.info("Retrieved the following node URNs: {}", nodeURNs);
+
+		log.info("Resetting nodes...");
+
+		// Send a message to nodes via uart (to receive them enable RX_UART_MSGS in the fronts_config.h-file)
+		Message msg = new Message();
+		//BinaryMessage bmsg = new BinaryMessage();
+		msg.setBinaryData(new byte[]{0xa,0x2,0x6,0,0,0,semantics[i],0,0,0,values[i] }); //command (1 = hello module) and sub command
+		msg.setSourceNodeId("urn:wisebed:ctitestbed:0xffff");
+		msg.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar)GregorianCalendar.getInstance()));
+
+		Future sendFuture = wsn.send(nodeURNs,msg, 10, TimeUnit.SECONDS);
+		JobResult sendJobResult = sendFuture.get();
+		log.info("{}", sendJobResult);
+		if (sendJobResult.getSuccessPercent() < 100) {
+			System.out.println("Not all nodes could receive the message. Exiting");
+			System.exit(1);
+		}
+		Thread.sleep(250);
+	}
+
+	Thread.sleep(1000);
+		List demandNodeURNs;
+		demandNodeURNs = WiseMLHelper.getNodeUrns(wsn.getNetwork().get(), new String[]{});
+		log.info("Setting Demands for the following node URNs: {}", demandNodeURNs);
+		// Send a message to nodes via uart (to receive them enable RX_UART_MSGS in the fronts_config.h-file)
+		Message msg = new Message();
+		msg.setBinaryData(new byte[]{0xa,0x2,0x1});
+		msg.setSourceNodeId("urn:wisebed:ctitestbed:0xffff");
+		msg.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar)GregorianCalendar.getInstance()));
+
+		Future sendFuture = wsn.send(demandNodeURNs,msg, 10, TimeUnit.SECONDS);
+		JobResult sendJobResult = sendFuture.get();
+		log.info("{}", sendJobResult);
+		if (sendJobResult.getSuccessPercent() < 100) {
+			System.out.println("Not all nodes could receive the message. Exiting");
+			System.exit(1);
+		}
+
+
+	log.info("Closing connection...");
+	pcc.disconnect();
+
+	log.info("Shutting down...");
+	System.exit(0);

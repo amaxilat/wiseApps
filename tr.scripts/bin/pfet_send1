@@ -1,0 +1,14 @@
+if [ "$#" -lt 2 ]
+then
+./send-protobuf1 ../fet.properties $1 > tmp
+else 
+./send-protobuf1 ../fet.properties $1 urn:wisebed:ctitestbed:0x$2> tmp
+fi
+
+if [ $(grep -e "false" tmp | wc -l) -eq 0 ]
+then
+        echo DONE
+else
+        echo FAILED
+fi
+

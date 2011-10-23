@@ -1,0 +1,4 @@
+./unset-virtual-link ../gold.properties urn:wisebed:ctitestbed:0x057f urn:wisebed:uzl1:0x1c72
+./unset-virtual-link ../gold.properties urn:wisebed:ctitestbed:0x060d urn:wisebed:uzl1:0x1721
+./unset-virtual-link ../gold.properties urn:wisebed:ctitestbed:0x0104 urn:wisebed:tubs:411
+./unset-virtual-link ../gold.properties urn:wisebed:ctitestbed:0x0c92 urn:wisebed:tubs:412

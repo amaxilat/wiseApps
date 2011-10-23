@@ -1,0 +1,5 @@
+./set-virtual-link-protobuf ../cti.properties urn:wisebed:ctitestbed:0x295 urn:wisebed:ctitestbed:0xc7a
+./set-virtual-link-protobuf ../cti.properties urn:wisebed:ctitestbed:0x296 urn:wisebed:ctitestbed:0x6699
+./set-virtual-link-protobuf ../cti.properties urn:wisebed:ctitestbed:0x9979 urn:wisebed:ctitestbed:0x99ad
+./set-virtual-link-protobuf ../cti.properties urn:wisebed:ctitestbed:0x153d urn:wisebed:ctitestbed:0x498
+./set-virtual-link-protobuf ../cti.properties urn:wisebed:ctitestbed:0x1cde urn:wisebed:ctitestbed:0x1b7f

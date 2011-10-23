@@ -1,0 +1,16 @@
+#!/bin/bash
+BASEDIR=`dirname $0`
+
+if [ "$#" -lt 1 ]
+then
+	echo "Usage $0 PROPERTIES_FILE"
+	echo "Example: $0 live.properties"
+	exit 1
+fi
+resKey=$(cat ../resKey)
+
+java \
+ -Dtestbed.secretreservationkeys=$resKey \
+ -cp $BASEDIR/../lib/tr.scripting-client-current.jar \
+ de.uniluebeck.itm.wisebed.cmdlineclient.scripts.GetSupportedChannelHandlers \
+ $1
