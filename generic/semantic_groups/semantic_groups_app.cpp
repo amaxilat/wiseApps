@@ -4,7 +4,11 @@
 
 #include "external_interface/external_interface.h"
 
+#ifdef ISENSE
 #define USE_SENSORS
+#define VIRTUAL_RADIO
+#endif
+
 #ifdef USE_SENSORS
 #include <isense/modules/environment_module/environment_module.h>
 #include <isense/modules/security_module/pir_sensor.h>
@@ -26,7 +30,6 @@ typedef wiselib::OSMODEL Os;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::block_data_t block_data_t;
 
-#define VIRTUAL_RADIO
 #ifdef VIRTUAL_RADIO
 #include "util/wisebed_node_api/virtual_extended_txradio.h"
 #include "util/base_classes/routing_base.h"
@@ -41,16 +44,13 @@ typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
 
 #define INTEGER_STORAGE
 #ifdef INTEGER_STORAGE
-#define ANSWERING
 #include "algorithms/cluster/semantics.h" 
 typedef wiselib::Semantics<Os> semantics_t;
 #else
 #include "util/allocators/malloc_free_allocator.h"
-#include "util/tuple_store/tuple_store.h"
 #include "algorithms/cluster/spit/tuple_store_adaptor.h"
 typedef wiselib::MallocFreeAllocator<Os> allocator_t;
-typedef wiselib::TupleStore<Os, 3, allocator_t> tuple_store_t;
-typedef wiselib::TupleStoreAdaptor<tuple_store_t> semantics_t;
+typedef wiselib::TupleStoreAdaptor<Os, allocator_t> semantics_t;
 #endif
 
 
@@ -81,18 +81,22 @@ typedef Os::Uart::size_t uart_size_t;
 typedef semantics_t::predicate_t predicate_t;
 typedef semantics_t::value_t value_t;
 
-class SemanticGroupsApp :
+class SemanticGroupsApp
+#ifdef ISENSE
+:
 public isense::Uint32DataHandler,
 public isense::Int8DataHandler,
-public isense::SensorHandler {
+public isense::SensorHandler
+#endif
+{
 public:
 
-    void handle_uint32_data(uint32 value) {
+    void handle_uint32_data(uint32_t value) {
     }
 
     //--------------------------------------------------------------
 
-    void handle_int8_data(int8 value) {
+    void handle_int8_data(int8_t value) {
     }
 
     void init(Os::AppMainParameter& value) {
@@ -114,14 +118,14 @@ public:
 #else 
         radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
 #endif
-        debug_->debug("*B*%x", radio_->id());
+        debug_->debug("*Boot*%x", radio_->id());
         radio_->enable_radio();
         //        routing_.init(*radio_, *debug_);
         //        routing_.enable_radio();    
         rand_->srand(radio_->id());
 
 
-        //        radio_->reg_recv_callback<SemanticGroupsApp, &SemanticGroupsApp::receive_commands > (this);
+        //radio_->reg_recv_callback<SemanticGroupsApp, &SemanticGroupsApp::receive_commands > (this);
 
         //clustering_algo_.reg_state_changed_callback<SemanticGroupsApp, &SemanticGroupsApp::clustering_events > (this);
         //neighbor_discovery.reg_event_callback<SemanticGroupsApp, &SemanticGroupsApp::nd_callback > (7, nb_t::NEW_NB | nb_t::NEW_NB_BIDI, this);
@@ -143,7 +147,7 @@ public:
 
 
 
-
+#ifdef ISENSE
         em_ = new isense::EnvironmentModule(value);
         if (em_ != NULL) {
             if (em_->light_sensor()->enable()) {
@@ -179,6 +183,7 @@ public:
             pir_->set_pir_sensor_int_interval(2000);
 
         }
+#endif
 
 #ifdef CHANGE_POWER
         TxPower power;
@@ -186,7 +191,7 @@ public:
         radio_->set_power(power);
 #endif
 
-        radio_->set_channel(15);
+        //        radio_->set_channel(15);
 
 #ifdef ENABLE_UART_CL
         uart_->reg_read_callback<SemanticGroupsApp, &SemanticGroupsApp::handle_uart_msg > (this);
@@ -209,12 +214,8 @@ public:
                 default:
                     neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2500, 15000, 200, 255);
             }
-
-
-
-
         }
-        neighbor_discovery.register_debug_callback(nb_t::NEW_NB_BIDI | nb_t::DROPPED_NB | nb_t::LOST_NB_BIDI);
+        neighbor_discovery.register_debug_callback(nb_t::NEW_NB | nb_t::NEW_NB_BIDI | nb_t::DROPPED_NB | nb_t::LOST_NB_BIDI);
         //        neighbor_discovery.enable();
     }
 
@@ -237,12 +238,14 @@ public:
     // --------------------------------------------------------------------
 
     void start(void * a) {
+        debug_->debug("start - %d", a);
         //
         //        if (clustering_algo_.is_child(0x786a)) {
         //            debug_->debug("IsChild 0x786a");
         //        }
 
         if (a == 0) {
+
             disabled_ = false;
             //            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 10000, 200, 230);
             // set the HeadDecision Module
@@ -254,19 +257,19 @@ public:
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery, semantics_);
 
 
-
-
-
-
-            //debug_->debug("ON");
             disabled_ = true;
-            //            neighbor_discovery.enable();
-            //clustering_algo_.enable(40);
+
+#ifndef ISENSE
+            enable();
+            int p=2;
+            int val=1;
+            semantics_.set_semantic_value(predicate_t((block_data_t*)&p),value_t((block_data_t*)&val));
+#endif 
 
 #ifdef VISUALIZER
             if (!is_otap()) {
 
-                clustering_algo_.register_debug_callback();
+                //                clustering_algo_.register_debug_callback();
             }
 #endif
 
@@ -274,7 +277,7 @@ public:
             //            if (!disabled_) clustering_algo_.present_neighbors();
         }
 
-
+#ifdef ISENSE
 #ifdef INTEGER_STORAGE
         predicate_t predicate_p;
 
@@ -298,6 +301,7 @@ public:
             value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(predicate_p, value_p);
         }
+#endif
 #endif
 
         timer_->set_timer<SemanticGroupsApp,
@@ -369,7 +373,7 @@ private:
         if (disabled_) {
             debug_->debug("ON");
             neighbor_discovery.enable();
-            clustering_algo_.enable(120);
+            clustering_algo_.enable();
             disabled_ = false;
         }
     }
@@ -439,8 +443,10 @@ private:
 
     bool light_sensor_, temp_sensor_, pir_sensor_;
 
+#ifdef ISENSE
     isense::EnvironmentModule* em_;
     isense::PirSensor* pir_;
+#endif
 
 
 
