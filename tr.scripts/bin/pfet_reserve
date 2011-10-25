@@ -1,0 +1,11 @@
+./reserve ../gold.properties 10 0 $(cat nodes) > tmp
+if [ $(grep -e "Some nodes are reserved" ../resKeyt | wc -l) -ne 0 ]
+then
+        echo "Some nodes are reserved"
+elif [ $(grep -e "Connection refused" ../resKeyt | wc -l) -ne 0 ]
+then
+	echo "A testbed is offline"
+else 
+        echo DONE
+fi
+

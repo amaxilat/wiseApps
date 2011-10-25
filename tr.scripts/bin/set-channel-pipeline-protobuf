@@ -1,0 +1,19 @@
+#!/bin/bash
+BASEDIR=`dirname $0`
+
+if [ "$#" -lt 2 ]
+then
+	echo "Usage $0 PROPERTIES_FILE CONFIG_FILE [NODEURNS]"
+	echo "Example: $0 live.properties handlerchain.xml urn:wisebed:uzl1:0xcc3d,urn:wisebed:uzl1:0xcc3e"
+	exit 1
+fi
+resKey=$(cat ../resKey)
+
+java \
+ -Dtestbed.secretreservationkeys=$resKey \
+ -Dtestbed.configfile=$2 \
+ -Dtestbed.nodeurns=$3 \
+ -Dtestbed.useprotobuf=true \
+ -cp $BASEDIR/../lib/tr.scripting-client-current.jar  \
+ de.uniluebeck.itm.wisebed.cmdlineclient.scripts.SetChannelPipeline \
+ $1

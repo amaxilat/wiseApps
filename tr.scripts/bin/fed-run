@@ -1,0 +1,60 @@
+#!/bin/bash
+NODE_ALL=$(echo "$(cat nodes_full),$(cat tubs_isense),$(cat unige_isense)")
+NODE_GW=$(echo "$(cat nodes_otap)")
+#NODE_ALL=$NODE_GW
+NODE_WIRED=$(echo "$(cat nodes_full),$(cat tubs_isense),$(cat unige_isense)")
+#NODE_WIRED=$NODE_GW
+PROPFILE=../fed.properties
+EVENTS_FILE=trace_fed.events
+INTERVAL=1
+TIME=120
+rm -rf $EVENTS_FILE
+echo "RESERVING"
+#./reserve $PROPFILE $TIME 0 $NODE_ALL >> $EVENTS_FILE
+
+#echo "FLASHING ISERAERIAL"
+#./flash $PROPFILE iSerAerial_JN5139R1_16bit.bin $NODE_GW >> $EVENTS_FILE
+#echo "FLASHING OTAP"
+
+echo "FLSHING WIRED"
+./flash $PROPFILE clustering.bin $NODE_WIRED >> $EVENTS_FILE
+echo "DONE FLASHING"
+
+echo "STARTED LISTENER"
+./listen $PROPFILE &
+echo "RESETED"
+./reset $PROPFILE >> $EVENTS_FILE
+
+#echo "STARTING"
+./send $PROPFILE 10,2,1 10,2,1 $NODE_WIRED >> $EVENTS_FILE
+#echo "WAIT $INTERVAL seconds"
+
+#sleep 60;
+#echo "SETTING VLS"
+#./set-virtual-link ../fed.properties urn:wisebed:unigetestbed:0x96e0 urn:wisebed:tubs:402
+#./set-virtual-link ../fed.properties urn:wisebed:unigetestbed:0x96f4 urn:wisebed:tubs:408
+#./set-virtual-link ../fed.properties urn:wisebed:unigetestbed:0x9710 urn:wisebed:tubs:420
+#./set-virtual-link ../fed.properties urn:wisebed:unigetestbed:0x1b99 urn:wisebed:ctitestbed:0x295
+#./set-virtual-link ../fed.properties urn:wisebed:tubs:401 urn:wisebed:ctitestbed:0x9979
+#./set-virtual-link ../fed.properties urn:wisebed:tubs:408 urn:wisebed:ctitestbed:0x296
+
+
+#sleep $INTERVAL
+#echo "FAILING"
+#./send $PROPFILE 10,2,3 10,2,3 $NODE_WIRED >> $EVENTS_FILE
+
+#sleep $INTERVAL
+#echo "RECOVERING"
+#./send $PROPFILE 10,2,4 10,2,4 $NODE_WIRED >> $EVENTS_FILE
+
+
+#sleep $INTERVAL
+#echo "FAILING"
+#./send $PROPFILE 10,2,3 10,2,3 $NODE_WIRED >> $EVENTS_FILE
+
+#sleep $INTERVAL
+#echo "RECOVERING"
+#./send $PROPFILE 10,2,4 10,2,4 $NODE_WIRED >> $EVENTS_FILE
+
+
+
