@@ -119,6 +119,7 @@ public:
         radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
 #endif
         debug_->debug("*Boot*%x", radio_->id());
+
         radio_->enable_radio();
         //        routing_.init(*radio_, *debug_);
         //        routing_.enable_radio();    
@@ -202,7 +203,7 @@ public:
         //        }
         timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (1000, this, 0);
 
-
+#ifdef ISENSE
         if ((radio_->id() >= 400) && (radio_->id() < 431)) {
             neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2500, 15000, 150, 255);
         } else {
@@ -215,7 +216,11 @@ public:
                     neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2500, 15000, 200, 255);
             }
         }
+#else
+        neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 250, 1500, 200, 255);
+#endif
         neighbor_discovery.register_debug_callback(nb_t::NEW_NB | nb_t::NEW_NB_BIDI | nb_t::DROPPED_NB | nb_t::LOST_NB_BIDI);
+        clustering_algo_.register_debug_callback();
         //        neighbor_discovery.enable();
     }
 
@@ -261,9 +266,15 @@ public:
 
 #ifndef ISENSE
             enable();
-            int p=2;
-            int val=1;
-            semantics_.set_semantic_value(predicate_t((block_data_t*)&p),value_t((block_data_t*)&val));
+            int p = 2;
+            int val = 1;
+            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
+
+
+            p = 211;
+            val = 30;
+            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
+
 #endif 
 
 #ifdef VISUALIZER
