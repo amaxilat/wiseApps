@@ -6,13 +6,13 @@
 
 #ifdef ISENSE
 #define USE_SENSORS
-#define VIRTUAL_RADIO
+//#define VIRTUAL_RADIO
 #endif
 
 #ifdef USE_SENSORS
 #include <isense/modules/environment_module/environment_module.h>
-#include <isense/modules/security_module/pir_sensor.h>
-#include <isense/modules/core_module/core_module.h>
+//#include <isense/modules/security_module/pir_sensor.h>
+//#include <isense/modules/core_module/core_module.h>
 #endif
 
 #include "algorithms/cluster/clustering_types.h"
@@ -85,8 +85,8 @@ class SemanticGroupsApp
 #ifdef ISENSE
 :
 public isense::Uint32DataHandler,
-public isense::Int8DataHandler,
-public isense::SensorHandler
+public isense::Int8DataHandler
+//public isense::SensorHandler
 #endif
 {
 public:
@@ -172,18 +172,18 @@ public:
 
         }
         //        debug_->debug("pir");
-        pir_ = new isense::PirSensor(value);
-        if (pir_->enable()) {
-            pir_sensor_ = true;
-
-            // ----- configure PIR sensor -------------
-            // set this application as the sensor event handler
-            // --> handle_sensor will be called upon a PIR event
-            pir_->set_sensor_handler(this);
-            //set the PIR event duration to 2 secs
-            pir_->set_pir_sensor_int_interval(2000);
-
-        }
+//        pir_ = new isense::PirSensor(value);
+//        if (pir_->enable()) {
+//            pir_sensor_ = true;
+//
+//            // ----- configure PIR sensor -------------
+//            // set this application as the sensor event handler
+//            // --> handle_sensor will be called upon a PIR event
+//            pir_->set_sensor_handler(this);
+//            //set the PIR event duration to 2 secs
+//            pir_->set_pir_sensor_int_interval(2000);
+//
+//        }
 #endif
 
 #ifdef CHANGE_POWER
@@ -220,21 +220,20 @@ public:
         neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 250, 1500, 200, 255);
 #endif
         neighbor_discovery.register_debug_callback(nb_t::NEW_NB | nb_t::NEW_NB_BIDI | nb_t::DROPPED_NB | nb_t::LOST_NB_BIDI);
-        clustering_algo_.register_debug_callback();
         //        neighbor_discovery.enable();
     }
 
-    void handle_sensor() {
-        //        debug_->debug("pir event from node %x", radio_->id());
-        if (pir_sensor_) {
-#ifdef INTEGER_STORAGE
-            int pir = semantics_t::PIR, value = 1;
-            predicate_t pir_p = predicate_t((block_data_t*) & pir, sizeof (int));
-            value_t value_p = value_t((block_data_t*) & value, sizeof (int));
-            semantics_.set_semantic_value(pir_p, value_p);
-#endif
-        }
-    }
+//    void handle_sensor() {
+//        //        debug_->debug("pir event from node %x", radio_->id());
+//        if (pir_sensor_) {
+//#ifdef INTEGER_STORAGE
+//            int pir = semantics_t::PIR, value = 1;
+//            predicate_t pir_p = predicate_t((block_data_t*) & pir, sizeof (int));
+//            value_t value_p = value_t((block_data_t*) & value, sizeof (int));
+//            semantics_.set_semantic_value(pir_p, value_p);
+//#endif
+//        }
+//    }
 
     bool is_otap() {
         return false;
@@ -272,15 +271,21 @@ public:
 
 
             p = 211;
-            val = 30;
+            val = rand()(35);
+            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
+            p = 210;
+            val = rand()(250);
+            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
+
+            p = 4;
+            val = 3;
             semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
 
 #endif 
 
 #ifdef VISUALIZER
             if (!is_otap()) {
-
-                //                clustering_algo_.register_debug_callback();
+                clustering_algo_.register_debug_callback();
             }
 #endif
 
@@ -294,12 +299,12 @@ public:
 
         value_t value_p;
 
-        if (pir_sensor_) {
-            int pir = semantics_t::PIR, value = 0;
-            predicate_p = predicate_t((block_data_t*) & pir, sizeof (int));
-            value_p = value_t((block_data_t*) & value, sizeof (int));
-            semantics_.set_semantic_value(predicate_p, value_p);
-        }
+//        if (pir_sensor_) {
+//            int pir = semantics_t::PIR, value = 0;
+//            predicate_p = predicate_t((block_data_t*) & pir, sizeof (int));
+//            value_p = value_t((block_data_t*) & value, sizeof (int));
+//            semantics_.set_semantic_value(predicate_p, value_p);
+//        }
         if (light_sensor_) {
             int light = semantics_t::LIGHT, value = em_->light_sensor()->luminance();
             predicate_p = predicate_t((block_data_t*) & light, sizeof (int));
@@ -456,8 +461,12 @@ private:
 
 #ifdef ISENSE
     isense::EnvironmentModule* em_;
-    isense::PirSensor* pir_;
+//    isense::PirSensor* pir_;
 #endif
+
+    Os::Rand & rand() {
+        return *rand_;
+    }
 
 
 
