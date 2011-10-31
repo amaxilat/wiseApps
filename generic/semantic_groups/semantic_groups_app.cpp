@@ -172,18 +172,18 @@ public:
 
         }
         //        debug_->debug("pir");
-//        pir_ = new isense::PirSensor(value);
-//        if (pir_->enable()) {
-//            pir_sensor_ = true;
-//
-//            // ----- configure PIR sensor -------------
-//            // set this application as the sensor event handler
-//            // --> handle_sensor will be called upon a PIR event
-//            pir_->set_sensor_handler(this);
-//            //set the PIR event duration to 2 secs
-//            pir_->set_pir_sensor_int_interval(2000);
-//
-//        }
+        //        pir_ = new isense::PirSensor(value);
+        //        if (pir_->enable()) {
+        //            pir_sensor_ = true;
+        //
+        //            // ----- configure PIR sensor -------------
+        //            // set this application as the sensor event handler
+        //            // --> handle_sensor will be called upon a PIR event
+        //            pir_->set_sensor_handler(this);
+        //            //set the PIR event duration to 2 secs
+        //            pir_->set_pir_sensor_int_interval(2000);
+        //
+        //        }
 #endif
 
 #ifdef CHANGE_POWER
@@ -223,17 +223,17 @@ public:
         //        neighbor_discovery.enable();
     }
 
-//    void handle_sensor() {
-//        //        debug_->debug("pir event from node %x", radio_->id());
-//        if (pir_sensor_) {
-//#ifdef INTEGER_STORAGE
-//            int pir = semantics_t::PIR, value = 1;
-//            predicate_t pir_p = predicate_t((block_data_t*) & pir, sizeof (int));
-//            value_t value_p = value_t((block_data_t*) & value, sizeof (int));
-//            semantics_.set_semantic_value(pir_p, value_p);
-//#endif
-//        }
-//    }
+    //    void handle_sensor() {
+    //        //        debug_->debug("pir event from node %x", radio_->id());
+    //        if (pir_sensor_) {
+    //#ifdef INTEGER_STORAGE
+    //            int pir = semantics_t::PIR, value = 1;
+    //            predicate_t pir_p = predicate_t((block_data_t*) & pir, sizeof (int));
+    //            value_t value_p = value_t((block_data_t*) & value, sizeof (int));
+    //            semantics_.set_semantic_value(pir_p, value_p);
+    //#endif
+    //        }
+    //    }
 
     bool is_otap() {
         return false;
@@ -299,23 +299,26 @@ public:
 
         value_t value_p;
 
-//        if (pir_sensor_) {
-//            int pir = semantics_t::PIR, value = 0;
-//            predicate_p = predicate_t((block_data_t*) & pir, sizeof (int));
-//            value_p = value_t((block_data_t*) & value, sizeof (int));
-//            semantics_.set_semantic_value(predicate_p, value_p);
-//        }
+        //        if (pir_sensor_) {
+        int pir = 213, value = rand()(30);
+        predicate_p = predicate_t((block_data_t*) & pir, sizeof (int));
+        value_p = value_t((block_data_t*) & value, sizeof (int));
+        semantics_.set_semantic_value(predicate_p, value_p);
+        debug_->debug("Sread:%s:%s", predicate_p.c_str(), value_p.c_str());
+        //        }
         if (light_sensor_) {
             int light = semantics_t::LIGHT, value = em_->light_sensor()->luminance();
             predicate_p = predicate_t((block_data_t*) & light, sizeof (int));
             value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(predicate_p, value_p);
+            debug_->debug("Sread:%s:%s", predicate_p.c_str(), value_p.c_str());
         }
         if (temp_sensor_) {
             int temp = semantics_t::TEMP, value = em_->temp_sensor()->temperature();
             predicate_p = predicate_t((block_data_t*) & temp, sizeof (int));
             value_p = value_t((block_data_t*) & value, sizeof (int));
             semantics_.set_semantic_value(predicate_p, value_p);
+            debug_->debug("Sread:%s:%s", predicate_p.c_str(), value_p.c_str());
         }
 #endif
 #endif
@@ -461,7 +464,7 @@ private:
 
 #ifdef ISENSE
     isense::EnvironmentModule* em_;
-//    isense::PirSensor* pir_;
+    //    isense::PirSensor* pir_;
 #endif
 
     Os::Rand & rand() {
