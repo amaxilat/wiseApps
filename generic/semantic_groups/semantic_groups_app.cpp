@@ -25,6 +25,7 @@
 #define VISUALIZER
 #define ENABLE_UART_CL
 
+
 typedef wiselib::OSMODEL Os;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::block_data_t block_data_t;
@@ -86,8 +87,8 @@ class SemanticGroupsApp
 #ifdef ISENSE
 :
 public isense::Uint32DataHandler
-,public isense::Int8DataHandler
-,public isense::SensorHandler
+, public isense::Int8DataHandler
+, public isense::SensorHandler
 #endif
 {
 public:
@@ -317,10 +318,7 @@ public:
                         disable();
                         break;
                     case 0x6:
-                        //set semantic - integer mode
                         set_semantic((block_data_t*) data + 2, (block_data_t*) data + 6);
-                        //command.set_controll_type(ControllMsg_t::CHANGE_K);
-                        //command.set_payload(data[2]);
                         break;
                     case 0x7:
                         //                        clustering_algo_.reset_demands();
@@ -371,28 +369,12 @@ private:
         }
     }
 
-    //    void change_k(uint8_t k) {
-    //        debug_->debug("ChangeK;%x;%d", radio_->id(), k);
-    //        //        clustering_algo_.set_maxhops(k);
-    //    }
-
     void set_semantic(block_data_t* id, block_data_t* value) {
         predicate_t pred = predicate_t(id);
         value_t val = value_t(value);
         debug_->debug("SS;%s;%s", pred.c_str(), val.c_str());
         semantics_.set_semantic_value(pred, val);
     }
-    //
-    //    void set_demands(int id, int value) {
-    //        debug_->debug("SD;%d;%d", id, value);
-    //        //        clustering_algo_.set_demands(id, value);
-    //    }
-    //
-    //    void query(int i) {
-    //        //        clustering_algo_.answer(i);
-    //    }
-
-    //    routing_t routing_;
 
     bool clustering_enabled_;
 
