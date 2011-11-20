@@ -1,0 +1,185 @@
+<?xml version="1.0" ?>
+<scenario>
+<snapshot id="0">
+	<node id="v0-rASEZB-C">
+		<location x="0.818801" y="2.01244" z="0" />
+	</node>
+	<node id="v1-rASEZB-D">
+		<location x="2.40425" y="0.0862822" z="0" />
+	</node>
+	<node id="v2-rASEZB-E">
+		<location x="2.44273" y="1.3703" z="0" />
+	</node>
+	<node id="v3-rASEZB-F">
+		<location x="3.73739" y="1.50626" z="0" />
+	</node>
+	<node id="v4-rASEZB-G">
+		<location x="0.853829" y="1.19944" z="0" />
+	</node>
+	<node id="v5-rASEZB-H">
+		<location x="2.22581" y="1.21878" z="0" />
+	</node>
+	<node id="v6-rASEZB-I">
+		<location x="3.36302" y="2.47695" z="0" />
+	</node>
+	<node id="v7-rASEZB-J">
+		<location x="0.237502" y="3.92487" z="0" />
+	</node>
+	<node id="v8-rASEZB-K">
+		<location x="0.6578" y="2.96673" z="0" />
+	</node>
+	<node id="v9-rASEZB-L">
+		<location x="1.57424" y="0.352894" z="0" />
+	</node>
+	<node id="v10-rASEZB-M">
+		<location x="3.40865" y="0.904263" z="0" />
+	</node>
+	<node id="v11-rASEZB-N">
+		<location x="1.26228" y="3.63513" z="0" />
+	</node>
+	<node id="v12-rASEZB-O">
+		<location x="2.02096" y="0.498302" z="0" />
+	</node>
+	<node id="v13-rASEZB-P">
+		<location x="3.92853" y="0.144507" z="0" />
+	</node>
+	<node id="v14-rASEZB-Q">
+		<location x="1.63829" y="1.58634" z="0" />
+	</node>
+	<node id="v15-rASEZB-R">
+		<location x="3.59879" y="3.63827" z="0" />
+	</node>
+	<node id="v16-rASEZB-S">
+		<location x="3.72455" y="2.45709" z="0" />
+	</node>
+	<node id="v17-rASEZB-T">
+		<location x="3.82739" y="2.00303" z="0" />
+	</node>
+	<node id="v18-rASEZB-U">
+		<location x="3.50929" y="2.16728" z="0" />
+	</node>
+	<node id="v19-rASEZB-V">
+		<location x="3.36672" y="3.56477" z="0" />
+	</node>
+	<node id="v20-rASEZB-W">
+		<location x="0.783555" y="0.363119" z="0" />
+	</node>
+	<node id="v21-rASEZB-X">
+		<location x="2.84007" y="1.59253" z="0" />
+	</node>
+	<node id="v22-rASEZB-Y">
+		<location x="1.5174" y="0.146572" z="0" />
+	</node>
+	<node id="v23-rASEZB-Z">
+		<location x="3.1133" y="3.07757" z="0" />
+	</node>
+	<node id="v24-rASEZB-a">
+		<location x="3.43046" y="2.1752" z="0" />
+	</node>
+	<node id="v25-rASEZB-b">
+		<location x="3.07946" y="0.68754" z="0" />
+	</node>
+	<node id="v26-rASEZB-c">
+		<location x="0.322666" y="2.83911" z="0" />
+	</node>
+	<node id="v27-rASEZB-d">
+		<location x="3.33741" y="0.341749" z="0" />
+	</node>
+	<node id="v28-rASEZB-e">
+		<location x="0.486255" y="2.34362" z="0" />
+	</node>
+	<node id="v29-rASEZB-f">
+		<location x="3.92997" y="3.26594" z="0" />
+	</node>
+	<node id="v30-rASEZB-g">
+		<location x="2.9042" y="2.12454" z="0" />
+	</node>
+	<node id="v31-rASEZB-h">
+		<location x="0.581628" y="3.52875" z="0" />
+	</node>
+	<node id="v32-rASEZB-i">
+		<location x="1.53179" y="2.62876" z="0" />
+	</node>
+	<node id="v33-rASEZB-j">
+		<location x="0.796035" y="0.409017" z="0" />
+	</node>
+	<node id="v34-rASEZB-k">
+		<location x="3.97379" y="1.04108" z="0" />
+	</node>
+	<node id="v35-rASEZB-l">
+		<location x="1.40419" y="0.162752" z="0" />
+	</node>
+	<node id="v36-rASEZB-m">
+		<location x="1.75528" y="0.757346" z="0" />
+	</node>
+	<node id="v37-rASEZB-n">
+		<location x="0.903918" y="0.244261" z="0" />
+	</node>
+	<node id="v38-rASEZB-o">
+		<location x="3.32183" y="3.27268" z="0" />
+	</node>
+	<node id="v39-rASEZB-p">
+		<location x="1.44788" y="0.0172151" z="0" />
+	</node>
+	<node id="v40-rASEZB-q">
+		<location x="0.704755" y="2.75229" z="0" />
+	</node>
+	<node id="v41-rASEZB-r">
+		<location x="1.5914" y="0.527348" z="0" />
+	</node>
+	<node id="v42-rASEZB-s">
+		<location x="0.869097" y="1.02742" z="0" />
+	</node>
+	<node id="v43-rASEZB-t">
+		<location x="3.37104" y="0.928809" z="0" />
+	</node>
+	<node id="v44-rASEZB-u">
+		<location x="0.194744" y="1.35535" z="0" />
+	</node>
+	<node id="v45-rASEZB-v">
+		<location x="3.47989" y="3.30101" z="0" />
+	</node>
+	<node id="v46-rASEZB-w">
+		<location x="2.82976" y="3.09895" z="0" />
+	</node>
+	<node id="v47-rASEZB-x">
+		<location x="1.72771" y="0.0615216" z="0" />
+	</node>
+	<node id="v48-rASEZB-y">
+		<location x="0.470538" y="0.361548" z="0" />
+	</node>
+	<node id="v49-rASEZB-z">
+		<location x="1.40262" y="2.52374" z="0" />
+	</node>
+	<node id="v50-rASEZB-0">
+		<location x="2.68649" y="0.444329" z="0" />
+	</node>
+	<node id="v51-rASEZB-1">
+		<location x="1.20168" y="2.80682" z="0" />
+	</node>
+	<node id="v52-rASEZB-2">
+		<location x="3.05108" y="0.441775" z="0" />
+	</node>
+	<node id="v53-rASEZB-3">
+		<location x="3.71446" y="2.10559" z="0" />
+	</node>
+	<node id="v54-rASEZB-4">
+		<location x="2.12281" y="2.37291" z="0" />
+	</node>
+	<node id="v55-rASEZB-5">
+		<location x="1.1252" y="1.16234" z="0" />
+	</node>
+	<node id="v56-rASEZB-6">
+		<location x="1.68969" y="2.82756" z="0" />
+	</node>
+	<node id="v57-rASEZB-7">
+		<location x="3.85498" y="2.7166" z="0" />
+	</node>
+	<node id="v58-rASEZB-8">
+		<location x="3.64541" y="2.55879" z="0" />
+	</node>
+	<node id="v59-rASEZB-9">
+		<location x="3.91414" y="3.22603" z="0" />
+	</node>
+</snapshot>
+</scenario>

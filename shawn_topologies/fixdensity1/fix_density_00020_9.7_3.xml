@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<scenario>
+<snapshot id="0">
+	<node id="v0-pASEZB-C">
+		<location x="0.769516" y="1.58289" z="0" />
+	</node>
+	<node id="v1-pASEZB-D">
+		<location x="0.933838" y="0.845374" z="0" />
+	</node>
+	<node id="v2-pASEZB-E">
+		<location x="1.35351" y="1.9637" z="0" />
+	</node>
+	<node id="v3-pASEZB-F">
+		<location x="0.705903" y="0.323551" z="0" />
+	</node>
+	<node id="v4-pASEZB-G">
+		<location x="0.105567" y="0.396326" z="0" />
+	</node>
+	<node id="v5-pASEZB-H">
+		<location x="1.48762" y="0.591933" z="0" />
+	</node>
+	<node id="v6-pASEZB-I">
+		<location x="0.498474" y="1.65399" z="0" />
+	</node>
+	<node id="v7-pASEZB-J">
+		<location x="1.30507" y="1.02276" z="0" />
+	</node>
+	<node id="v8-pASEZB-K">
+		<location x="0.303869" y="0.785277" z="0" />
+	</node>
+	<node id="v9-pASEZB-L">
+		<location x="0.173144" y="1.43324" z="0" />
+	</node>
+	<node id="v10-pASEZB-M">
+		<location x="1.52293" y="0.201017" z="0" />
+	</node>
+	<node id="v11-pASEZB-N">
+		<location x="0.192463" y="1.04566" z="0" />
+	</node>
+	<node id="v12-pASEZB-O">
+		<location x="1.1397" y="1.37342" z="0" />
+	</node>
+	<node id="v13-pASEZB-P">
+		<location x="0.233575" y="1.28785" z="0" />
+	</node>
+	<node id="v14-pASEZB-Q">
+		<location x="1.62894" y="0.477965" z="0" />
+	</node>
+	<node id="v15-pASEZB-R">
+		<location x="0.060855" y="1.41688" z="0" />
+	</node>
+	<node id="v16-pASEZB-S">
+		<location x="0.262251" y="0.398454" z="0" />
+	</node>
+	<node id="v17-pASEZB-T">
+		<location x="0.362154" y="0.994693" z="0" />
+	</node>
+	<node id="v18-pASEZB-U">
+		<location x="1.31824" y="1.61577" z="0" />
+	</node>
+	<node id="v19-pASEZB-V">
+		<location x="0.0120917" y="1.06806" z="0" />
+	</node>
+</snapshot>
+</scenario>
