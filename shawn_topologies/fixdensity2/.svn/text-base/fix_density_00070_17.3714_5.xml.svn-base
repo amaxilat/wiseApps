@@ -1,0 +1,215 @@
+<?xml version="1.0" ?>
+<scenario>
+<snapshot id="0">
+	<node id="v0-cBSEZB-C">
+		<location x="0.359528" y="1.04165" z="0" />
+	</node>
+	<node id="v1-cBSEZB-D">
+		<location x="0.439035" y="0.736244" z="0" />
+	</node>
+	<node id="v2-cBSEZB-E">
+		<location x="2.96633" y="2.22806" z="0" />
+	</node>
+	<node id="v3-cBSEZB-F">
+		<location x="0.90436" y="2.53397" z="0" />
+	</node>
+	<node id="v4-cBSEZB-G">
+		<location x="0.579411" y="0.472455" z="0" />
+	</node>
+	<node id="v5-cBSEZB-H">
+		<location x="1.9963" y="2.25286" z="0" />
+	</node>
+	<node id="v6-cBSEZB-I">
+		<location x="2.32779" y="2.94285" z="0" />
+	</node>
+	<node id="v7-cBSEZB-J">
+		<location x="0.487684" y="1.76044" z="0" />
+	</node>
+	<node id="v8-cBSEZB-K">
+		<location x="0.256839" y="2.33976" z="0" />
+	</node>
+	<node id="v9-cBSEZB-L">
+		<location x="0.0121601" y="0.515599" z="0" />
+	</node>
+	<node id="v10-cBSEZB-M">
+		<location x="0.465549" y="1.88443" z="0" />
+	</node>
+	<node id="v11-cBSEZB-N">
+		<location x="2.27965" y="1.33968" z="0" />
+	</node>
+	<node id="v12-cBSEZB-O">
+		<location x="0.11916" y="1.26424" z="0" />
+	</node>
+	<node id="v13-cBSEZB-P">
+		<location x="0.533225" y="2.69216" z="0" />
+	</node>
+	<node id="v14-cBSEZB-Q">
+		<location x="1.98877" y="0.761915" z="0" />
+	</node>
+	<node id="v15-cBSEZB-R">
+		<location x="1.80357" y="2.61169" z="0" />
+	</node>
+	<node id="v16-cBSEZB-S">
+		<location x="0.347934" y="2.34829" z="0" />
+	</node>
+	<node id="v17-cBSEZB-T">
+		<location x="1.57636" y="2.2426" z="0" />
+	</node>
+	<node id="v18-cBSEZB-U">
+		<location x="1.77657" y="0.314264" z="0" />
+	</node>
+	<node id="v19-cBSEZB-V">
+		<location x="0.786719" y="2.48072" z="0" />
+	</node>
+	<node id="v20-cBSEZB-W">
+		<location x="1.73358" y="2.35598" z="0" />
+	</node>
+	<node id="v21-cBSEZB-X">
+		<location x="2.29883" y="2.78302" z="0" />
+	</node>
+	<node id="v22-cBSEZB-Y">
+		<location x="1.54345" y="1.06137" z="0" />
+	</node>
+	<node id="v23-cBSEZB-Z">
+		<location x="0.401131" y="2.78652" z="0" />
+	</node>
+	<node id="v24-cBSEZB-a">
+		<location x="0.302115" y="1.80029" z="0" />
+	</node>
+	<node id="v25-cBSEZB-b">
+		<location x="0.684718" y="0.413291" z="0" />
+	</node>
+	<node id="v26-cBSEZB-c">
+		<location x="1.75297" y="0.767664" z="0" />
+	</node>
+	<node id="v27-cBSEZB-d">
+		<location x="2.0319" y="2.96437" z="0" />
+	</node>
+	<node id="v28-cBSEZB-e">
+		<location x="2.65653" y="1.87213" z="0" />
+	</node>
+	<node id="v29-cBSEZB-f">
+		<location x="2.63405" y="2.56512" z="0" />
+	</node>
+	<node id="v30-cBSEZB-g">
+		<location x="2.17681" y="1.6453" z="0" />
+	</node>
+	<node id="v31-cBSEZB-h">
+		<location x="0.993592" y="1.43761" z="0" />
+	</node>
+	<node id="v32-cBSEZB-i">
+		<location x="0.680216" y="2.52475" z="0" />
+	</node>
+	<node id="v33-cBSEZB-j">
+		<location x="2.83901" y="2.56995" z="0" />
+	</node>
+	<node id="v34-cBSEZB-k">
+		<location x="2.05067" y="2.45679" z="0" />
+	</node>
+	<node id="v35-cBSEZB-l">
+		<location x="1.81277" y="0.625731" z="0" />
+	</node>
+	<node id="v36-cBSEZB-m">
+		<location x="0.408747" y="0.78425" z="0" />
+	</node>
+	<node id="v37-cBSEZB-n">
+		<location x="1.84562" y="1.1116" z="0" />
+	</node>
+	<node id="v38-cBSEZB-o">
+		<location x="0.898121" y="1.9522" z="0" />
+	</node>
+	<node id="v39-cBSEZB-p">
+		<location x="0.75249" y="2.24675" z="0" />
+	</node>
+	<node id="v40-cBSEZB-q">
+		<location x="2.66005" y="1.20024" z="0" />
+	</node>
+	<node id="v41-cBSEZB-r">
+		<location x="1.9679" y="1.43721" z="0" />
+	</node>
+	<node id="v42-cBSEZB-s">
+		<location x="1.40158" y="1.41302" z="0" />
+	</node>
+	<node id="v43-cBSEZB-t">
+		<location x="0.285149" y="0.9998" z="0" />
+	</node>
+	<node id="v44-cBSEZB-u">
+		<location x="0.564924" y="1.05811" z="0" />
+	</node>
+	<node id="v45-cBSEZB-v">
+		<location x="2.70341" y="2.9192" z="0" />
+	</node>
+	<node id="v46-cBSEZB-w">
+		<location x="1.35681" y="2.74174" z="0" />
+	</node>
+	<node id="v47-cBSEZB-x">
+		<location x="2.26649" y="0.697003" z="0" />
+	</node>
+	<node id="v48-cBSEZB-y">
+		<location x="0.266952" y="2.03703" z="0" />
+	</node>
+	<node id="v49-cBSEZB-z">
+		<location x="1.49381" y="2.1055" z="0" />
+	</node>
+	<node id="v50-cBSEZB-0">
+		<location x="2.73123" y="2.31762" z="0" />
+	</node>
+	<node id="v51-cBSEZB-1">
+		<location x="0.10187" y="0.306586" z="0" />
+	</node>
+	<node id="v52-cBSEZB-2">
+		<location x="1.41819" y="0.139975" z="0" />
+	</node>
+	<node id="v53-cBSEZB-3">
+		<location x="2.09217" y="1.94749" z="0" />
+	</node>
+	<node id="v54-cBSEZB-4">
+		<location x="1.19425" y="2.31631" z="0" />
+	</node>
+	<node id="v55-cBSEZB-5">
+		<location x="0.516548" y="2.84466" z="0" />
+	</node>
+	<node id="v56-cBSEZB-6">
+		<location x="1.28187" y="0.854293" z="0" />
+	</node>
+	<node id="v57-cBSEZB-7">
+		<location x="2.26731" y="2.48445" z="0" />
+	</node>
+	<node id="v58-cBSEZB-8">
+		<location x="0.484248" y="2.68345" z="0" />
+	</node>
+	<node id="v59-cBSEZB-9">
+		<location x="0.741562" y="2.55246" z="0" />
+	</node>
+	<node id="v60-cBSEZB-AB">
+		<location x="2.47165" y="1.04917" z="0" />
+	</node>
+	<node id="v61-cBSEZB-BB">
+		<location x="0.790909" y="0.444974" z="0" />
+	</node>
+	<node id="v62-cBSEZB-CB">
+		<location x="1.14198" y="0.828465" z="0" />
+	</node>
+	<node id="v63-cBSEZB-DB">
+		<location x="2.86549" y="0.0573951" z="0" />
+	</node>
+	<node id="v64-cBSEZB-EB">
+		<location x="2.16289" y="1.40893" z="0" />
+	</node>
+	<node id="v65-cBSEZB-FB">
+		<location x="0.726549" y="1.35931" z="0" />
+	</node>
+	<node id="v66-cBSEZB-GB">
+		<location x="1.66589" y="1.89412" z="0" />
+	</node>
+	<node id="v67-cBSEZB-HB">
+		<location x="2.0341" y="0.828419" z="0" />
+	</node>
+	<node id="v68-cBSEZB-IB">
+		<location x="2.77591" y="0.0840824" z="0" />
+	</node>
+	<node id="v69-cBSEZB-JB">
+		<location x="2.40039" y="1.12627" z="0" />
+	</node>
+</snapshot>
+</scenario>

@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<scenario>
+<snapshot id="0">
+	<node id="v0-LgTEZB-C">
+		<location x="2.68671" y="0.530731" z="0" />
+	</node>
+	<node id="v1-LgTEZB-D">
+		<location x="2.86214" y="0.527888" z="0" />
+	</node>
+	<node id="v2-LgTEZB-E">
+		<location x="1.55575" y="1.43502" z="0" />
+	</node>
+	<node id="v3-LgTEZB-F">
+		<location x="1.20399" y="1.08412" z="0" />
+	</node>
+	<node id="v4-LgTEZB-G">
+		<location x="2.98714" y="1.39846" z="0" />
+	</node>
+	<node id="v5-LgTEZB-H">
+		<location x="1.46627" y="0.590586" z="0" />
+	</node>
+	<node id="v6-LgTEZB-I">
+		<location x="1.42223" y="0.49303" z="0" />
+	</node>
+	<node id="v7-LgTEZB-J">
+		<location x="2.13089" y="1.32616" z="0" />
+	</node>
+	<node id="v8-LgTEZB-K">
+		<location x="0.0714115" y="1.39905" z="0" />
+	</node>
+	<node id="v9-LgTEZB-L">
+		<location x="0.523843" y="2.63091" z="0" />
+	</node>
+	<node id="v10-LgTEZB-M">
+		<location x="2.50718" y="2.53604" z="0" />
+	</node>
+	<node id="v11-LgTEZB-N">
+		<location x="0.263832" y="2.47614" z="0" />
+	</node>
+	<node id="v12-LgTEZB-O">
+		<location x="0.387011" y="0.84817" z="0" />
+	</node>
+	<node id="v13-LgTEZB-P">
+		<location x="0.7263" y="0.412046" z="0" />
+	</node>
+	<node id="v14-LgTEZB-Q">
+		<location x="2.2463" y="1.21216" z="0" />
+	</node>
+	<node id="v15-LgTEZB-R">
+		<location x="1.74289" y="2.0794" z="0" />
+	</node>
+	<node id="v16-LgTEZB-S">
+		<location x="2.60728" y="1.93301" z="0" />
+	</node>
+	<node id="v17-LgTEZB-T">
+		<location x="0.368031" y="1.60504" z="0" />
+	</node>
+	<node id="v18-LgTEZB-U">
+		<location x="2.68915" y="1.16304" z="0" />
+	</node>
+	<node id="v19-LgTEZB-V">
+		<location x="2.5615" y="1.57202" z="0" />
+	</node>
+</snapshot>
+</scenario>
