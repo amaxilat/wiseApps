@@ -5,13 +5,14 @@
 #include "external_interface/external_interface.h"
 
 #ifdef ISENSE
-#define USE_SENSORS
-
+//#define USE_SENSORS
+#define CHANGE_POWER
+#define CHANGE_CHANNEL
 #endif
 
 #ifdef USE_SENSORS
 #include <isense/modules/environment_module/environment_module.h>
-#include <isense/modules/security_module/pir_sensor.h>
+//#include <isense/modules/security_module/pir_sensor.h>
 #endif
 
 #include "algorithms/cluster/clustering_types.h"
@@ -68,6 +69,16 @@ typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug
 #define GROUP
 #ifdef GROUP
 #include "algorithms/cluster/group/group_core.h"
+
+#include "algorithms/routing/query/queryMsg.h"
+
+#include "algorithms/routing/query/se_query_rounting.h"
+#include "algorithms/routing/query/se_query_flooding.h"
+#endif
+
+#ifdef USE_RELIABLE
+#include "radio/reliable/reliableradio.h"
+typedef wiselib::ReliableRadio<Os, Radio, Os::Timer, Os::Debug> rel_radio_t;
 #endif
 
 
@@ -76,6 +87,13 @@ typedef wiselib::NothingClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
 typedef wiselib::GroupJoinDecision<Os, Radio, semantics_t> JD_t;
 typedef wiselib::GroupIterator<Os, Radio, semantics_t> IT_t;
 typedef wiselib::GroupCore<Os, Radio, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
+
+
+typedef wiselib::QueryMsg<Os, Radio> QueryMsg_t;
+
+
+typedef wiselib::SeQueryRouting<Os, Radio, semantics_t, nb_t> seQueryRouting_t;
+//typedef wiselib::SeQueryFlooding<Os, Radio, semantics_t, clustering_algo_t> seQueryRouting_t;
 #endif
 
 typedef Os::Uart::size_t uart_size_t;
@@ -88,7 +106,7 @@ class SemanticGroupsApp
 :
 public isense::Uint32DataHandler
 , public isense::Int8DataHandler
-, public isense::SensorHandler
+//, public isense::SensorHandler
 #endif
 {
 public:
@@ -105,6 +123,8 @@ public:
 
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
         debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
+        debug_->debug("*Boot*%x", radio_->id());
+
         clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
 #ifdef ENABLE_UART_CL
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
@@ -116,11 +136,9 @@ public:
         radio_ = &virtual_radio_;
         hardware_radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
         virtual_radio_.init(*hardware_radio_, *uart_, *debug_);
-
 #else 
         radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
 #endif
-        debug_->debug("*Boot*%x", radio_->id());
 
         radio_->enable_radio();
         //        routing_.init(*radio_, *debug_);
@@ -128,6 +146,7 @@ public:
         rand_->srand(radio_->id());
 
 #ifdef ISENSE
+#ifdef USE_SENSORS
         em_ = new isense::EnvironmentModule(value);
         if (em_ != NULL) {
             if (em_->light_sensor()->enable()) {
@@ -151,21 +170,24 @@ public:
 
         }
 
-        pir_ = new isense::PirSensor(value);
-        if (pir_->enable()) {
-            pir_sensor_ = true;
-
-            // ----- configure PIR sensor -------------
-            // set this application as the sensor event handler
-            // --> handle_sensor will be called upon a PIR event
-            pir_->set_sensor_handler(this);
-            //set the PIR event duration to 2 secs
-            pir_->set_pir_sensor_int_interval(2000);
-
-        }
+        //        pir_ = new isense::PirSensor(value);
+        //        if (pir_->enable()) {
+        //            pir_sensor_ = true;
+        //
+        //            // ----- configure PIR sensor -------------
+        //            // set this application as the sensor event handler
+        //            // --> handle_sensor will be called upon a PIR event
+        //            pir_->set_sensor_handler(this);
+        //            //set the PIR event duration to 2 secs
+        //            pir_->set_pir_sensor_int_interval(2000);
+        //
+        //        }
+#endif
 #endif
 
-        //        radio_->set_channel(17);
+#ifdef CHANGE_CHANNEL
+        radio_->set_channel(16);
+#endif
 
 #ifdef ENABLE_UART_CL
         uart_->reg_read_callback<SemanticGroupsApp, &SemanticGroupsApp::handle_uart_msg > (this);
@@ -174,8 +196,18 @@ public:
         timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (1000, this, 0);
 
 #ifdef ISENSE
-        uint8_t echo_threshold = 200;
-        if ((radio_->id() >= 400) && (radio_->id() < 431)) { //TUBSnodes
+        uint8_t echo_threshold = 190;
+        if ((radio_->id() >= 0x2000) && (radio_->id() < 0x2200)) {//UZLnodes
+
+#ifdef CHANGE_POWER
+            Radio::TxPower power;
+            power.set_dB(0);
+            radio_->set_power(power);
+            debug_->debug("power set to 0");
+#endif
+
+            echo_threshold = 190;
+        } else if ((radio_->id() >= 400) && (radio_->id() < 431)) { //TUBSnodes
 
             Radio::TxPower power;
             power.set_dB(-12);
@@ -184,13 +216,6 @@ public:
             echo_threshold = 180;
 
 
-        } else if ((radio_->id() >= 0x2000) && (radio_->id() < 0x2200)) {//UZLnodes
-
-            Radio::TxPower power;
-            power.set_dB(-12);
-            radio_->set_power(power);
-            debug_->debug("power set to -12");
-            echo_threshold = 180;
         } else {
 
             switch (radio_->id()) {
@@ -205,7 +230,8 @@ public:
                     break;
             }
         }
-        neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2500, 40000, echo_threshold, 255);
+        neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 16000, echo_threshold, 210);
+        debug_->debug("nb_init;echo_threshold");
 #else    
 
 #endif
@@ -213,16 +239,16 @@ public:
         neighbor_discovery.enable();
     }
 
-    void handle_sensor() {
-        //        debug_->debug("pir event from node %x", radio_->id());
-        if (pir_sensor_) {
-#ifdef INTEGER_STORAGE
-            int pir = semantics_t::PIR, value = 1;
-            semantics_.set_semantic_value(predicate_t((block_data_t*) & pir, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-            debug_->debug("Sread:%d:%d", pir, value);
-#endif
-        }
-    }
+    //    void handle_sensor() {
+    //        //        debug_->debug("pir event from node %x", radio_->id());
+    //        if (pir_sensor_) {
+    //#ifdef INTEGER_STORAGE
+    //            int pir = semantics_t::PIR, value = 1;
+    //            semantics_.set_semantic_value(predicate_t((block_data_t*) & pir, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
+    //            debug_->debug("Sread:%d:%d", pir, value);
+    //#endif
+    //        }
+    //    }
 
     bool is_otap() {
         return false;
@@ -235,7 +261,6 @@ public:
         if (a == 0) {
 
             disabled_ = false;
-            //            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 10000, 200, 230);
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
@@ -243,11 +268,27 @@ public:
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery, semantics_);
-
+            seQueryRouting_.init(*radio_, *timer_, *debug_, semantics_, neighbor_discovery);
 
             disabled_ = true;
 
+
+            if ((radio_->id() >= 0x2000) && (radio_->id() < 0x2100)) {//UZL 5139R1
+                int room = (radio_->id() - 0x2000) / 0x4;
+                int roomID = 4;
+                debug_->debug("iS %x - R %d ", radio_->id(), room);
+                set_semantic((block_data_t*) & roomID, (block_data_t*) & room);
+            } else if ((radio_->id() >= 0x2100) && (radio_->id() < 0x2200)) {//UZL 5148
+                int room = (radio_->id() - 0x2100) / 0x4;
+                int roomID = 4;
+                debug_->debug("iS %x - R %d ", radio_->id(), room);
+                set_semantic((block_data_t*) & roomID, (block_data_t*) & room);
+            }
+
+            enable();
+
 #ifndef ISENSE
+
             enable();
             int p = 2;
             int val = 1;
@@ -274,18 +315,19 @@ public:
 
 #ifdef ISENSE //update semantics part
 #ifdef INTEGER_STORAGE
+#ifdef USE_SENSORS
 
-        if (pir_sensor_) {
-            int pir = semantics_t::PIR, value = 0;
-            semantics_.set_semantic_value(predicate_t((block_data_t*) & pir, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-            debug_->debug("Sread:%d:%d", pir, value);
-        }
+        //        if (pir_sensor_) {
+        //            int pir = 215, value = rand()(100);
+        //            semantics_.set_semantic_value(predicate_t((block_data_t*) & pir, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
+        //            debug_->debug("Sread:%d:%d", pir, value);
+        //        }
         if (light_sensor_) {
 
             int light = semantics_t::LIGHT, value = em_->light_sensor()->luminance();
             if ((value < 4000) && (value > 0)) {
                 semantics_.set_semantic_value(predicate_t((block_data_t*) & light, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-                debug_->debug("Sread:%d:%d", light, value);
+                //                debug_->debug("Sread:%d:%d", light, value);
             }
         }
         if (temp_sensor_) {
@@ -293,9 +335,10 @@ public:
             int temp = semantics_t::TEMP, value = em_->temp_sensor()->temperature();
             if ((value < 4000) && (value > 0)) {
                 semantics_.set_semantic_value(predicate_t((block_data_t*) & temp, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-                debug_->debug("Sread:%d:%d", temp, value);
+                //                debug_->debug("Sread:%d:%d", temp, value);
             }
         }
+#endif
 #endif
 #endif
 
@@ -310,38 +353,41 @@ public:
         if (data[0] == 0x2) {
             //if an enable message
             if (!is_otap()) {
-                switch (data[1]) {
-                    case 0x1:
-                        enable();
-                        break;
-                    case 0x2:
-                        disable();
-                        break;
-                    case 0x6:
-                        set_semantic((block_data_t*) data + 2, (block_data_t*) data + 6);
-                        break;
-                    case 0x7:
-                        //                        clustering_algo_.reset_demands();
-                        //run a query
-                        //                        for (uint8_t pos = 2; pos < len; pos += 2 * sizeof (int)) {
-                        //                            int semantic_id, semantic_value;
-                        //                            memcpy(&semantic_id, data + pos, sizeof (int));
-                        //                            memcpy(&semantic_value, data + pos + 4, sizeof (int));
-                        //                            set_demands(semantic_id, semantic_value);
-                        //                        }
-                        //                        query(0);
-                        break;
-                    case 0x8:
-                        //                        clustering_algo_.reset_demands();
-                        //run a query
-                        //                        for (uint8_t pos = 2; pos < len; pos += 1 * sizeof (int)) {
-                        //                            int semantic_id, semantic_value;
-                        //                            memcpy(&semantic_id, data + pos, sizeof (int));
-                        //                            semantic_value = 1;
-                        //                            set_demands(semantic_id, semantic_value);
-                        //                        }
-                        //                        query(1);
-                        break;
+                //initialize here as it is not possible in switch
+                QueryMsg_t test;
+                semantics_t::group_entry_t a;
+                if (data[1] == 0x1) {
+                    enable();
+                } else if (data[1] == 0x2) {
+                    disable();
+                } else if (data[1] == 0x6) {
+                    set_semantic((block_data_t*) data + 2, (block_data_t*) data + 6);
+                } else if (data[1] == 0x7) {
+
+                    test.set_msg_id(QueryMsg_t::SEROUTING);
+                    test.set_alg_id(QueryMsg_t::QUERY);
+                    test.set_sender(radio_->id());
+                    test.set_destination(0xffff);
+
+                    int ge[2] = {data[2], data[3]};
+                    semantics_t::group_entry_t a = semantics_t::group_entry_t((block_data_t*) ge);
+
+                    test.add_statement(a.data(), a.size());
+
+                    debug_->debug("SQ;%x;%s", radio_->id(), a.c_str());
+                    seQueryRouting_.send(0xffff, test.length(), (uint8_t*) & test);
+
+                } else if (data[1] == 0x8) {
+                    //                        clustering_algo_.reset_demands();
+                    //run a query
+                    //                        for (uint8_t pos = 2; pos < len; pos += 1 * sizeof (int)) {
+                    //                            int semantic_id, semantic_value;
+                    //                            memcpy(&semantic_id, data + pos, sizeof (int));
+                    //                            semantic_value = 1;
+                    //                            set_demands(semantic_id, semantic_value);
+                    //                        }
+                    //                        query(1);
+
 
                 }
             }
@@ -356,6 +402,7 @@ private:
             debug_->debug("ON");
 
             clustering_algo_.enable();
+            seQueryRouting_.enable_radio();
             disabled_ = false;
         }
     }
@@ -369,7 +416,7 @@ private:
         }
     }
 
-    void set_semantic(block_data_t* id, block_data_t* value) {
+    void set_semantic(block_data_t* id, block_data_t * value) {
         predicate_t pred = predicate_t(id);
         value_t val = value_t(value);
         debug_->debug("SS;%s;%s", pred.c_str(), val.c_str());
@@ -399,15 +446,20 @@ private:
     IT_t IT_;
     // clustering algorithm core component
     clustering_algo_t clustering_algo_;
+    seQueryRouting_t seQueryRouting_;
     bool disabled_;
 
     semantics_t semantics_;
 
-    bool light_sensor_, temp_sensor_, pir_sensor_;
+
+
+    bool light_sensor_, temp_sensor_;
 
 #ifdef ISENSE
+#ifdef USE_SENSORS
     isense::EnvironmentModule* em_;
-    isense::PirSensor* pir_;
+    //    isense::PirSensor* pir_;
+#endif
 #endif
 
     Os::Rand & rand() {
