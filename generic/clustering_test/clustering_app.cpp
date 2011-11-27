@@ -1,11 +1,12 @@
-/*
- * Clustering Application Using Echo
+/**
+ * Clustering Application
  */
 
 #include "external_interface/external_interface_testing.h"
 #include "algorithms/neighbor_discovery/echo.h"
-
 #include "algorithms/cluster/clustering_types.h"
+
+#define CHANNEL 18
 
 // Replace the first Algorithm name with one from the list in comment
 #define LCA //FRONTS MOCA LCA
@@ -19,20 +20,11 @@
 #include "algorithms/cluster/lca/lca.h"
 #endif
 
-
 #include "controll_message.h"
 #include "report_message.h"
 
-
-
-#ifdef SHAWN
-#include "external_interface/shawn/shawn_testbedservice_uart.h"
-#endif
-
-
-#define VISUALIZER
 #define ENABLE_UART_CL
-#define FAILURES_PERCENTAGE 30
+#define FAILURES_PERCENTAGE 0
 
 
 typedef wiselib::OSMODEL Os;
@@ -67,12 +59,12 @@ typedef wiselib::MocaCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
 #endif
 #ifdef LCA
 typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> CHD_t;
-typedef wiselib::BfsJoinDecision<Os,Radio> JD_t;
-typedef wiselib::FrontsIterator<Os,Radio> IT_t;
+typedef wiselib::BfsJoinDecision<Os, Radio> JD_t;
+typedef wiselib::FrontsIterator<Os, Radio> IT_t;
 typedef wiselib::LcaCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
 #endif
 
-typedef Os::Uart::size_t uart_size_t;
+
 
 //#define REMOTE_DEBUG
 #ifdef REMOTE_DEBUG
@@ -93,15 +85,13 @@ typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
 class ClusteringFronts {
 public:
+    typedef Os::Uart::size_t uart_size_t;
 
     void init(Os::AppMainParameter& value) {
-
-
 
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
         debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
         clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
-        position_ = &wiselib::FacetProvider<Os, Os::Position>::get_facet(value);
 #ifdef ENABLE_UART_CL
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
 #endif
@@ -139,98 +129,37 @@ public:
         remote_debug_.debug("hello world");
 #endif
 
-
-
-
-
-
+#ifndef SHAWN
 #ifdef CHANGE_POWER
         TxPower power;
         power.set_dB(DB);
         radio_->set_power(power);
 #endif
-
-        //radio_->set_channel(18);
+        radio_->set_channel(CHANNEL);
 
 #ifdef ENABLE_UART_CL
         uart_->reg_read_callback<ClusteringFronts, &ClusteringFronts::handle_uart_msg > (this);
         uart_->enable_serial_comm();
 #endif
 
-        debug_->debug("********BOOT%x*********", radio_->id());
-
+#endif
+        debug_->debug("*Boot%x*", radio_->id());
         timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, 0);
-
     }
 
-    //    bool is_gateway() {
-    //        switch (radio_->id()) {
-    //            case 0x498:
-    //            case 0x6699:
-    //            case 0xc7a:
-    //            case 0x99ad:
-    //            case 0x1b7f:
-    //                return true;
-    //            default:
-    //                return false;
-    //        }
-    //    }
+    // --------------------------------------------------------------------
 
     bool is_otap() {
-
-        //        if ((radio_->id() == 0x1bbf) ||
-        //                (radio_->id() == 0x14e6) ||
-        //                (radio_->id() == 0x995a) ||
-        //                (radio_->id() == 0x1bc1) ||
-        //                (radio_->id() == 0x997a) ||
-        //                (radio_->id() == 0x995d) ||
-        //                (radio_->id() == 0x152f) ||
-        //                (radio_->id() == 0x1538) ||
-        //                (radio_->id() == 0x997f) ||
-        //                (radio_->id() == 0x997c) ||
-        //                (radio_->id() == 0x1b96) ||
-        //                (radio_->id() == 0x14d9) ||
-        //                (radio_->id() == 0x1b8a) ||
-        //                (radio_->id() == 0x9977) ||
-        //                (radio_->id() == 0x9978) ||
-        //                (radio_->id() == 0x14ea) ||
-        //                (radio_->id() == 0x1539) ||
-        //                (radio_->id() == 0x997d) ||
-        //                (radio_->id() == 0x1c96) ||
-        //                (radio_->id() == 0x785c) ||
-        //                (radio_->id() == 0x14d4) ||
-        //                (radio_->id() == 0x1cd6) ||
-        //                (radio_->id() == 0x1bc4) ||
-        //                (radio_->id() == 0x1b76) ||
-        //                (radio_->id() == 0xdddd) ||
-        //                (radio_->id() == 0xcd9) ||
-        //                (radio_->id() == 0xca6) ||
-        //                (radio_->id() == 0xa41c) ||
-        //                (radio_->id() == 0x1b71) ||
-        //                (radio_->id() == 0x17a) ||
-        //                (radio_->id() == 0xc96) ||
-        //                (radio_->id() == 0xca2) ||
-        //                (radio_->id() == 0xca8) ||
-        //                (radio_->id() == 0x949e) ||
-        //                (radio_->id() == 0xddba))
-        //            return true;
-        //        else
         return false;
-
     }
-
 
     // --------------------------------------------------------------------
 
     void start(void * a) {
-        //
-        //        if (clustering_algo_.is_child(0x786a)) {
-        //            debug_->debug("IsChild 0x786a");
-        //        }
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 15000, 180, 220);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 16000, 190, 210);
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(CHD_);
             // set the JoinDecision Module
@@ -246,54 +175,21 @@ public:
 #ifdef LCA
             clustering_algo_.set_probability(20);
 #endif
-            //debug_->debug("ON");
-            disabled_ = true;
-            //neighbor_discovery.enable();
-            //clustering_algo_.enable(40);
 
-#ifdef VISUALIZER
+            disabled_ = true;
+
             if (!is_otap()) {
                 neighbor_discovery.register_debug_callback(0);
                 clustering_algo_.register_debug_callback();
             }
-#endif
-            //enable();
-
-        } else {
-            //            debug_->debug("NBsize %d", neighbor_discovery.stable_nb_size());
-            //            debug_->debug("Node %x Joined %d", radio_->id(), clustering_algo_.clusters_joined());
-            //clustering_algo_.present_neighbors();
-
-
-            //            if (!is_gateway()) {
-            //                if (clustering_algo_.cluster_id() != 0xffff) {
-            //                    ReportMsg_t mess;
-            //                    mess.set_report_type(ReportMsg_t::CLUSTER);
-            //                    mess.set_cluster_id(clustering_algo_.cluster_id());
-            //                    radio_->send(0xffff, mess.size(), (uint8_t*) & mess);
-            //                }
-            //            }
-
 
         }
-
-
-
-
-        //        debug_->debug("Gateways Nodes %d", clustering_algo_.node_count(0));
-        //        debug_->debug("Children Nodes %d", clustering_algo_.node_count(1));
-
-
-        timer_->set_timer<ClusteringFronts,
-                &ClusteringFronts::start > (10000, this, (void *) 1);
-
+        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, (void *) 1);
     }
 
 #ifdef ENABLE_UART_CL
 
     void handle_uart_msg(uart_size_t len, Os::Uart::block_data_t *data) {
-        //debug_->debug("Got a uart message %x", radio_->id());
-
         if (data[0] == 0x2) {
             ControllMsg_t command;
             //if an enable message
@@ -321,13 +217,13 @@ public:
                         command.set_payload(data[2]);
                         break;
                 }
-                radio_->send(0xffff, command.size(), (uint8_t *) & command);
+                radio_->send(Radio::BROADCAST_ADDRESS, command.size(), (uint8_t *) & command);
             }
         }
     }
 #endif
 
-    void receive_commands(Os::Radio::node_id_t src, Os::Radio::size_t len, Os::Radio::block_data_t * mess) {
+    void receive_commands(node_id_t src, Radio::size_t len, block_data_t * mess) {
         if (!is_otap()) {
             ReportMsg_t *m = (ReportMsg_t *) mess;
             if (m->msg_id() == ReportMsg_t::REPORT_MSG) {
@@ -515,16 +411,6 @@ private:
         clustering_algo_.set_maxhops(k);
     }
 
-
-    nb_t neighbor_discovery;
-
-    Os::Position *position_;
-    bool clustering_enabled_;
-
-    bool head_dropped_;
-    uint16_t period;
-    int counter;
-
 #ifdef VIRTUAL_RADIO
     Radio virtual_radio_;
     Radio * radio_;
@@ -539,7 +425,7 @@ private:
     routing_t routing_;
 #endif
 
-
+    nb_t neighbor_discovery;
     // clustering algorithm modules
     CHD_t CHD_;
     JD_t JD_;
@@ -547,8 +433,7 @@ private:
     // clustering algorithm core component
     clustering_algo_t clustering_algo_;
     bool disabled_;
-
-
+    bool clustering_enabled_;
 
     Os::Timer::self_pointer_t timer_;
     Os::Debug::self_pointer_t debug_;

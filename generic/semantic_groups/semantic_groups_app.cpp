@@ -17,16 +17,6 @@
 
 #include "algorithms/cluster/clustering_types.h"
 
-//#define ROUTING
-#ifdef ROUTING
-#include "internal_interface/routing_table/routing_table_static_array.h"
-#include "algorithms/routing/flooding/flooding_algorithm.h"
-#endif
-
-#define VISUALIZER
-#define ENABLE_UART_CL
-
-
 typedef wiselib::OSMODEL Os;
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::block_data_t block_data_t;
@@ -40,9 +30,12 @@ typedef wiselib::VirtualExtendedTxRadioModel<Os, Os::TxRadio, Os::Uart> Radio;
 #else 
 typedef Os::TxRadio Radio;
 #endif
+typedef Os::Uart::size_t uart_size_t;
 
+//INCLUDE ALGORITHMS
+
+//Neighbor Discovery
 #include "algorithms/neighbor_discovery/echo.h"
-
 typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
 
 #define INTEGER_STORAGE
@@ -56,60 +49,42 @@ typedef wiselib::MallocFreeAllocator<Os> allocator_t;
 typedef wiselib::TupleStoreAdaptor<Os, allocator_t> semantics_t;
 #endif
 
-
-
-#ifdef ROUTING
-typedef wiselib::StaticArrayRoutingTable<Os, Os::Radio, 64 > FloodingStaticMap;
-typedef wiselib::FloodingAlgorithm<Os, FloodingStaticMap, Os::TxRadio, Os::Debug> routing_t;
-#endif
-
-
-
-// Replace the first Algorithm name with one from the list in comment
-#define GROUP
-#ifdef GROUP
+//SE formation
 #include "algorithms/cluster/group/group_core.h"
+typedef wiselib::NothingClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
+typedef wiselib::GroupJoinDecision<Os, Radio, semantics_t> JD_t;
+typedef wiselib::GroupIterator<Os, Radio, semantics_t> IT_t;
+typedef wiselib::GroupCore<Os, Radio, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
 
+//SE Quering
 #include "algorithms/routing/query/queryMsg.h"
+typedef wiselib::QueryMsg<Os, Radio> QueryMsg_t;
 
 #include "algorithms/routing/query/se_query_rounting.h"
-#include "algorithms/routing/query/se_query_flooding.h"
-#endif
+typedef wiselib::SeQueryRouting<Os, Radio, Os::Timer, semantics_t, nb_t> seQueryRouting_t;
+
+//#include "algorithms/routing/query/se_query_flooding.h"
+//typedef wiselib::SeQueryFlooding<Os, Radio, Os::Timer, semantics_t, nb_t> seQueryRouting_t;
 
 #ifdef USE_RELIABLE
 #include "radio/reliable/reliableradio.h"
 typedef wiselib::ReliableRadio<Os, Radio, Os::Timer, Os::Debug> rel_radio_t;
 #endif
 
-
-#ifdef GROUP
-typedef wiselib::NothingClusterHeadDecision<Os, Radio, semantics_t> CHD_t;
-typedef wiselib::GroupJoinDecision<Os, Radio, semantics_t> JD_t;
-typedef wiselib::GroupIterator<Os, Radio, semantics_t> IT_t;
-typedef wiselib::GroupCore<Os, Radio, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
-
-
-typedef wiselib::QueryMsg<Os, Radio> QueryMsg_t;
-
-
-typedef wiselib::SeQueryRouting<Os, Radio, semantics_t, nb_t> seQueryRouting_t;
-//typedef wiselib::SeQueryFlooding<Os, Radio, semantics_t, clustering_algo_t> seQueryRouting_t;
-#endif
-
-typedef Os::Uart::size_t uart_size_t;
-
-typedef semantics_t::predicate_t predicate_t;
-typedef semantics_t::value_t value_t;
-
 class SemanticGroupsApp
 #ifdef ISENSE
+#ifdef USE_SENSORS
 :
 public isense::Uint32DataHandler
 , public isense::Int8DataHandler
 //, public isense::SensorHandler
 #endif
+#endif
 {
 public:
+
+    typedef semantics_t::predicate_t predicate_t;
+    typedef semantics_t::value_t value_t;
 
     void handle_uint32_data(uint32_t value) {
     }
@@ -123,12 +98,10 @@ public:
 
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
         debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
-        debug_->debug("*Boot*%x", radio_->id());
+        debug().debug("*Boot*%x", radio_->id());
 
         clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
-#ifdef ENABLE_UART_CL
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
-#endif
         rand_ = &wiselib::FacetProvider<Os, Os::Rand>::get_facet(value);
 
 
@@ -189,10 +162,9 @@ public:
         radio_->set_channel(16);
 #endif
 
-#ifdef ENABLE_UART_CL
         uart_->reg_read_callback<SemanticGroupsApp, &SemanticGroupsApp::handle_uart_msg > (this);
         uart_->enable_serial_comm();
-#endif        
+
         timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (1000, this, 0);
 
 #ifdef ISENSE
@@ -203,7 +175,7 @@ public:
             Radio::TxPower power;
             power.set_dB(0);
             radio_->set_power(power);
-            debug_->debug("power set to 0");
+            debug().debug("power set to 0");
 #endif
 
             echo_threshold = 190;
@@ -231,7 +203,7 @@ public:
             }
         }
         neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 16000, echo_threshold, 210);
-        debug_->debug("nb_init;echo_threshold");
+        debug().debug("nb_init;echo_threshold");
 #else    
 
 #endif
@@ -240,12 +212,12 @@ public:
     }
 
     //    void handle_sensor() {
-    //        //        debug_->debug("pir event from node %x", radio_->id());
+    //        //        debug().debug("pir event from node %x", radio_->id());
     //        if (pir_sensor_) {
     //#ifdef INTEGER_STORAGE
     //            int pir = semantics_t::PIR, value = 1;
     //            semantics_.set_semantic_value(predicate_t((block_data_t*) & pir, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-    //            debug_->debug("Sread:%d:%d", pir, value);
+    //            debug().debug("Sread:%d:%d", pir, value);
     //#endif
     //        }
     //    }
@@ -276,36 +248,19 @@ public:
             if ((radio_->id() >= 0x2000) && (radio_->id() < 0x2100)) {//UZL 5139R1
                 int room = (radio_->id() - 0x2000) / 0x4;
                 int roomID = 4;
-                debug_->debug("iS %x - R %d ", radio_->id(), room);
+                debug().debug("iS %x - R %d ", radio_->id(), room);
                 set_semantic((block_data_t*) & roomID, (block_data_t*) & room);
             } else if ((radio_->id() >= 0x2100) && (radio_->id() < 0x2200)) {//UZL 5148
                 int room = (radio_->id() - 0x2100) / 0x4;
                 int roomID = 4;
-                debug_->debug("iS %x - R %d ", radio_->id(), room);
+                debug().debug("iS %x - R %d ", radio_->id(), room);
                 set_semantic((block_data_t*) & roomID, (block_data_t*) & room);
             }
 
             enable();
 
 #ifndef ISENSE
-
             enable();
-            int p = 2;
-            int val = 1;
-            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
-
-
-            p = 211;
-            val = rand()(35);
-            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
-            p = 210;
-            val = rand()(250);
-            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
-
-            p = 4;
-            val = 3;
-            semantics_.set_semantic_value(predicate_t((block_data_t*) & p), value_t((block_data_t*) & val));
-
 #endif 
 
 
@@ -320,14 +275,14 @@ public:
         //        if (pir_sensor_) {
         //            int pir = 215, value = rand()(100);
         //            semantics_.set_semantic_value(predicate_t((block_data_t*) & pir, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-        //            debug_->debug("Sread:%d:%d", pir, value);
+        //            debug().debug("Sread:%d:%d", pir, value);
         //        }
         if (light_sensor_) {
 
             int light = semantics_t::LIGHT, value = em_->light_sensor()->luminance();
             if ((value < 4000) && (value > 0)) {
                 semantics_.set_semantic_value(predicate_t((block_data_t*) & light, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-                //                debug_->debug("Sread:%d:%d", light, value);
+                //                debug().debug("Sread:%d:%d", light, value);
             }
         }
         if (temp_sensor_) {
@@ -335,19 +290,16 @@ public:
             int temp = semantics_t::TEMP, value = em_->temp_sensor()->temperature();
             if ((value < 4000) && (value > 0)) {
                 semantics_.set_semantic_value(predicate_t((block_data_t*) & temp, sizeof (int)), value_t((block_data_t*) & value, sizeof (int)));
-                //                debug_->debug("Sread:%d:%d", temp, value);
+                //                debug().debug("Sread:%d:%d", temp, value);
             }
         }
 #endif
 #endif
 #endif
 
-        timer_->set_timer<SemanticGroupsApp,
-                &SemanticGroupsApp::start > (60000, this, (void *) 1);
+        timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (60000, this, (void *) 1);
 
     }
-
-#ifdef ENABLE_UART_CL
 
     void handle_uart_msg(uart_size_t len, Os::Uart::block_data_t *data) {
         if (data[0] == 0x2) {
@@ -374,33 +326,19 @@ public:
 
                     test.add_statement(a.data(), a.size());
 
-                    debug_->debug("SQ;%x;%s", radio_->id(), a.c_str());
+                    debug().debug("SQ;%x;%s", radio_->id(), a.c_str());
                     seQueryRouting_.send(0xffff, test.length(), (uint8_t*) & test);
-
-                } else if (data[1] == 0x8) {
-                    //                        clustering_algo_.reset_demands();
-                    //run a query
-                    //                        for (uint8_t pos = 2; pos < len; pos += 1 * sizeof (int)) {
-                    //                            int semantic_id, semantic_value;
-                    //                            memcpy(&semantic_id, data + pos, sizeof (int));
-                    //                            semantic_value = 1;
-                    //                            set_demands(semantic_id, semantic_value);
-                    //                        }
-                    //                        query(1);
-
 
                 }
             }
         }
     }
-#endif
 
 private:
 
     void enable() {
         if (disabled_) {
-            debug_->debug("ON");
-
+            debug().debug("ON");
             clustering_algo_.enable();
             seQueryRouting_.enable_radio();
             disabled_ = false;
@@ -409,8 +347,7 @@ private:
 
     void disable() {
         if (!disabled_) {
-            debug_->debug("OFF");
-            //            neighbor_discovery.disable();
+            debug().debug("OFF");
             clustering_algo_.disable();
             disabled_ = true;
         }
@@ -419,7 +356,7 @@ private:
     void set_semantic(block_data_t* id, block_data_t * value) {
         predicate_t pred = predicate_t(id);
         value_t val = value_t(value);
-        debug_->debug("SS;%s;%s", pred.c_str(), val.c_str());
+        debug().debug("SS;%s;%s", pred.c_str(), val.c_str());
         semantics_.set_semantic_value(pred, val);
     }
 
@@ -462,16 +399,14 @@ private:
 #endif
 #endif
 
-    Os::Rand & rand() {
-        return *rand_;
-    }
-
     Os::Timer::self_pointer_t timer_;
     Os::Debug::self_pointer_t debug_;
+
+    Os::Debug debug() {
+        return *debug_;
+    }
     Os::Clock::self_pointer_t clock_;
-#ifdef ENABLE_UART_CL
     Os::Uart::self_pointer_t uart_;
-#endif
     Os::Rand::self_pointer_t rand_;
 };
 // --------------------------------------------------------------------------

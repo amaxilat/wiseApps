@@ -2,6 +2,7 @@
 # Environment variable WISELIB_PATH needed
 # ----------------------------------------
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/iSense_full
+#export ISENSE_PATH=/home/amaxilatis/sdks/iSenseVM
 export ISENSE_PATH=/home/amaxilatis/sdks/iSense_noOTAP
 
 all: clean isense
