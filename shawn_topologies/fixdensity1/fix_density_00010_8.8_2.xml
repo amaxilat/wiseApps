@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<scenario>
+<snapshot id="0">
+	<node id="v0-pASEZB-C">
+		<location x="0.384758" y="0.791445" z="0" />
+	</node>
+	<node id="v1-pASEZB-D">
+		<location x="0.466919" y="0.422687" z="0" />
+	</node>
+	<node id="v2-pASEZB-E">
+		<location x="0.676757" y="0.98185" z="0" />
+	</node>
+	<node id="v3-pASEZB-F">
+		<location x="0.352951" y="0.161775" z="0" />
+	</node>
+	<node id="v4-pASEZB-G">
+		<location x="0.0527833" y="0.198163" z="0" />
+	</node>
+	<node id="v5-pASEZB-H">
+		<location x="0.743809" y="0.295967" z="0" />
+	</node>
+	<node id="v6-pASEZB-I">
+		<location x="0.249237" y="0.826993" z="0" />
+	</node>
+	<node id="v7-pASEZB-J">
+		<location x="0.652535" y="0.511381" z="0" />
+	</node>
+	<node id="v8-pASEZB-K">
+		<location x="0.151934" y="0.392639" z="0" />
+	</node>
+	<node id="v9-pASEZB-L">
+		<location x="0.0865721" y="0.716619" z="0" />
+	</node>
+</snapshot>
+</scenario>
