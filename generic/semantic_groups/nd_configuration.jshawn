@@ -6,10 +6,10 @@ String cm = "disk_graph";
 String procs = "wiselib_shawn_standalone";
 
 int iterations = 1000;
-int width = 4;
-int height = 4;
+int width = 5;
+int height = 5;
 int range = 1;
-int nodecount = 10;
+int nodecount = 22;
 int seed = 1; 
 
 //------------------------------------------------

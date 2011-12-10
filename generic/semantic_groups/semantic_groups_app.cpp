@@ -96,15 +96,6 @@ public:
 
     void init(Os::AppMainParameter& value) {
 
-        timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
-        debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
-        debug().debug("*Boot*%x", radio_->id());
-
-        clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
-        uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
-        rand_ = &wiselib::FacetProvider<Os, Os::Rand>::get_facet(value);
-
-
 #ifdef VIRTUAL_RADIO
         radio_ = &virtual_radio_;
         hardware_radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
@@ -112,10 +103,13 @@ public:
 #else 
         radio_ = &wiselib::FacetProvider<Os, Os::TxRadio>::get_facet(value);
 #endif
+        timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
+        debug_ = &wiselib::FacetProvider<Os, Os::Debug>::get_facet(value);
+        debug().debug("*Boot*%x", radio_->id());
 
-        radio_->enable_radio();
-        //        routing_.init(*radio_, *debug_);
-        //        routing_.enable_radio();    
+        clock_ = &wiselib::FacetProvider<Os, Os::Clock>::get_facet(value);
+        uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
+        rand_ = &wiselib::FacetProvider<Os, Os::Rand>::get_facet(value);
         rand_->srand(radio_->id());
 
 #ifdef ISENSE
@@ -207,6 +201,7 @@ public:
 #else    
 
 #endif
+        neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 16000, 180, 210);
         neighbor_discovery.register_debug_callback(nb_t::NEW_NB | nb_t::NEW_NB_BIDI | nb_t::DROPPED_NB | nb_t::LOST_NB_BIDI);
         neighbor_discovery.enable();
     }
@@ -244,6 +239,26 @@ public:
 
             disabled_ = true;
 
+#ifndef ISENSE
+
+            int room = (*rand_)() % 4;
+            int roomID = 4;
+            debug().debug("iS %x - R %d ", radio_->id(), room);
+            set_semantic((block_data_t*) & roomID, (block_data_t*) & room);
+
+            room = (*rand_)() % 3;
+            roomID = 5;
+            debug().debug("iS %x - R %d ", radio_->id(), room);
+            set_semantic((block_data_t*) & roomID, (block_data_t*) & room);
+
+            room = (*rand_)() % 2;
+            roomID = 6;
+            debug().debug("iS %x - R %d ", radio_->id(), room);
+            set_semantic((block_data_t*) & roomID, (block_data_t*) & room);
+
+
+            enable();
+#else
 
             if ((radio_->id() >= 0x2000) && (radio_->id() < 0x2100)) {//UZL 5139R1
                 int room = (radio_->id() - 0x2000) / 0x4;
@@ -258,17 +273,14 @@ public:
             }
 
             enable();
-
-#ifndef ISENSE
-            enable();
-#endif 
+#endif
 
 
             clustering_algo_.register_debug_callback();
 
         }
-
-#ifdef ISENSE //update semantics part
+        //update semantics part
+#ifdef ISENSE
 #ifdef INTEGER_STORAGE
 #ifdef USE_SENSORS
 
