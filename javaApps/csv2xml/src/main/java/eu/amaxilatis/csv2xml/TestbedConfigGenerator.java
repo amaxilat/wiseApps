@@ -2,7 +2,11 @@ package eu.amaxilatis.csv2xml;
 
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.StringTokenizer;
 
 class TestbedConfigGenerator {
@@ -121,6 +125,7 @@ class TestbedConfigGenerator {
 
         StringBuilder XMLoutput = new StringBuilder();
 
+
         portalHostname = "";
 
         XMLoutput.append(getTestbedPortal2XML());
@@ -155,7 +160,21 @@ class TestbedConfigGenerator {
                     + "\t\t\t<serverconnection address=\"" + currentHost.host_addr() + ":8880\" type=\"tcp\"/>\n"
                     + "\t\t</serverconnections>\n"
                     + "\t\t<applications>\n");
-
+            XMLoutput.append("\t\t\t<application factoryclass = \"de.uniluebeck.itm.tr.runtime.wsndeviceobserver.WSNDeviceObserverFactory\" name = \"WSNDeviceObserver\" >\n");
+            XMLoutput.append("\t\t\t\t<ns5:wsnDeviceObserver>\n");
+            for (String nodeId : csvTestbed.getNodes()) {
+                final CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
+                if (currentHost.hostname().equals(currentCsvNode.hostname())) {
+                    XMLoutput.append("\t\t\t\t\t");
+                    XMLoutput.append("<mapping mac=\"" + currentCsvNode.mac() + "\"");
+                    if (currentCsvNode.type().equals("telosb")) {
+                        XMLoutput.append(" usbchipid=\"" + currentCsvNode.usbchipid() + "\" ");
+                    }
+                    XMLoutput.append("/>\n");
+                }
+            }
+            XMLoutput.append("\t\t\t\t</ns5:wsnDeviceObserver>\n");
+            XMLoutput.append("\t\t\t</application>\n");
 
             for (String nodeId : csvTestbed.getNodes()) {
                 final CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
@@ -176,7 +195,7 @@ class TestbedConfigGenerator {
 
 
         }
-        XMLoutput.append("</ns2:csvTestbed>\n");
+        XMLoutput.append("</ns2:testbed>\n");
 
         save2file(XMLFilename, XMLoutput.toString());
 
@@ -216,16 +235,16 @@ class TestbedConfigGenerator {
             log.info("wsninstancebaseurl:" + wsninstancebaseurl);
             log.info("reservationendpointurl:" + reservationendpointurl);
 
+            XMLoutput.append("<ns2:testbed xmlns:ns2=\"http://itm.uniluebeck.de/tr/xml\" "
+                    + "xmlns:portal=\"http://itm.uniluebeck.de/tr/runtime/portalapp/xml\" "
+                    + "xmlns:ns5=\"http://itm.uniluebeck.de/tr/runtime/wsndeviceobserver/config\" "
+                    + "xmlns:wsn=\"http://itm.uniluebeck.de/tr/runtime/wsnapp/xml\">\n");
 
             XMLoutput.append(
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-                            + "<ns2:csvTestbed xmlns:ns2=\"http://itm.uniluebeck.de/tr/xml\" "
-                            + "xmlns:ns4=\"http://itm.uniluebeck.de/tr/runtime/wsnapp/xml\" "
-                            + "xmlns:ns3=\"http://itm.uniluebeck.de/tr/runtime/portalapp/xml\">\n"
-                            + "\t<nodes id=\"" + portalHostname + "\">\n"
+
+                    "\t<nodes id=\"" + portalHostname + "\">\n"
                             + "\t\t<names>\n"
                             + "\t\t\t<nodename name=\"" + name + "\"/>\n");
-
 
             for (String nodeId : csvTestbed.getNodes()) {
                 CsvNode currentCsvNode = csvTestbed.getNode(nodeId);
@@ -240,8 +259,8 @@ class TestbedConfigGenerator {
                             + "\t\t\t<serverconnection address=\"" + address + "\" type=\"tcp\"/>\n"
                             + "\t\t</serverconnections>\n"
                             + "\t\t<applications>\n"
-                            + "\t\t\t<application factoryclass=\"de.uniluebeck.itm.tr.runtime.portalapp.PortalServerFactory\" name=\"Portal\">\n"
-                            + "\t\t\t\t<ns3:portalapp>\n"
+                            + "\t\t\t<application  name=\"PortalServer\" factoryclass=\"de.uniluebeck.itm.tr.runtime.portalapp.PortalServerFactory\">\n"
+                            + "\t\t\t\t<portal:portalapp>\n"
                             + "\t\t\t\t\t<webservice>\n"
                             + "\t\t\t\t\t\t<urnprefix>" + urnprefix + "</urnprefix>\n"
                             + "\t\t\t\t\t\t<sessionmanagementendpointurl>" + sessionmanagementendpointurl + "</sessionmanagementendpointurl>\n"
@@ -253,7 +272,7 @@ class TestbedConfigGenerator {
                             + "\t\t\t\t\t\t<ip>" + protobufip + "</ip>\n"
                             + "\t\t\t\t\t</protobufinterface>\n"
                             + "\t\t\t\t\t</webservice>\n"
-                            + "\t\t\t\t</ns3:portalapp>\n"
+                            + "\t\t\t\t</portal:portalapp>\n"
                             + "\t\t\t</application>\n"
                             + "\t\t\t<application name=\"OverlaySocketConnector\" factoryclass=\"de.uniluebeck.itm.tr.runtime.socketconnector.server.SocketConnectorApplicationFactory\">\n"
                             + "\t\t\t\t<sc:socketconnector xmlns:sc=\"http://itm.uniluebeck.de/tr/runtime/socketconnector/server/xml\">\n"

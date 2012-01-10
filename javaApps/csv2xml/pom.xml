@@ -4,7 +4,7 @@
     <groupId>csv2xml</groupId>
     <artifactId>csv2xml</artifactId>
     <packaging>jar</packaging>
-    <version>0.21</version>
+    <version>0.8</version>
     <name>csv2xml</name>
     <url>http://qopbot.dyndns.org</url>
 
@@ -76,7 +76,9 @@
                     <execution>
                         <configuration>
                             <mainClass>eu.amaxilatis.csv2xml.Main</mainClass>
+                            <filename>${artifactId}.jar</filename>
                         </configuration>
+
                         <goals>
                             <goal>one-jar</goal>
                         </goals>
