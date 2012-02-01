@@ -40,10 +40,22 @@ public:
     }
 
     void execute(void* userdata) {
+	if((minute+=5)==60){
+	minute=0;
+	hour++;
+	if (hour==24){
+	hour=0;
+	day++;
+	if (day==30){
+	month++;
+	}
+	}
+	}
 
+	int time = minute*60+hour*60*60+day*24*60*60+month*30*24*60*60;
         uint32 lux = em_->light_sensor()->luminance();
 
-        os().debug("light %d", lux);
+        os().debug("%d$%f", lux);
 
         //repeat every 1 second
         os().add_task_in(Time(5, 0), this, NULL);
@@ -53,6 +65,10 @@ public:
 private:
     // pointer to the accelerometer
     isense::EnvironmentModule* em_;
+	int day;
+	int month;
+	int hour;
+	int minute;
 };
 
 //--------------------------------------------------------------
@@ -60,7 +76,11 @@ private:
 SecurityLampApplication::
 SecurityLampApplication(Os &_os) :
 Application(_os),
-em_(NULL) {
+em_(NULL),
+day(0),
+month(0),
+hour(0),
+minute(0) {
 }
 
 //--------------------------------------------------------------
