@@ -37,26 +37,6 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.6.1</version>
         </dependency>
-        <dependency>
-            <groupId>ichatz</groupId>
-            <artifactId>wiseml</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>de.uniluebeck.itm</groupId>
-            <artifactId>tr.scripting-client</artifactId>
-            <version>0.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>de.uniluebeck.itm</groupId>
-            <artifactId>tr.overlay</artifactId>
-            <version>0.7.1</version>
-        </dependency>
-        <dependency>
-            <groupId>de.uniluebeck.itm</groupId>
-            <artifactId>tr.iwsn-deviceapp</artifactId>
-            <version>0.7.1</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -75,7 +55,7 @@
                 <executions>
                     <execution>
                         <configuration>
-                            <mainClass>eu.amaxilatis.csv2xml.Main</mainClass>
+                            <mainClass>eu.amaxilatis.csv2xml.ConfigGenerate</mainClass>
                             <filename>${artifactId}.jar</filename>
                         </configuration>
 

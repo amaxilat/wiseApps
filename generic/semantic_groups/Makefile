@@ -3,7 +3,7 @@
 # ----------------------------------------
 #export ISENSE_PATH=/home/amaxilatis/Applications/SDK/iSense_full
 #export ISENSE_PATH=/home/amaxilatis/sdks/iSenseVM
-export ISENSE_PATH=/home/amaxilatis/sdks/iSense_noOTAP
+#export ISENSE_PATH=/home/amaxilatis/sdks/iSense_noOTAP
 
 all: clean isense
 # all: scw_msb

@@ -40,7 +40,7 @@ public:
     }
 
     void execute(void* userdata) {
-	if((minute+=5)==60){
+	if((minute+=15)==60){
 	minute=0;
 	hour++;
 	if (hour==24){
@@ -55,10 +55,11 @@ public:
 	int time = minute*60+hour*60*60+day*24*60*60+month*30*24*60*60;
         uint32 lux = em_->light_sensor()->luminance();
 
-        os().debug("%d$%f", lux);
+        os().debug("%d-%d %d:%d",month, day,hour,minute);
+        os().debug("%d$%d.0",time, lux);
 
         //repeat every 1 second
-        os().add_task_in(Time(5, 0), this, NULL);
+        os().add_task_in(Time(3, 0), this, NULL);
     }
 
 
@@ -80,7 +81,7 @@ em_(NULL),
 day(0),
 month(0),
 hour(0),
-minute(0) {
+minute(-30) {
 }
 
 //--------------------------------------------------------------

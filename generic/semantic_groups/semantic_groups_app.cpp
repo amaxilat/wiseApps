@@ -6,7 +6,7 @@
 
 #ifdef ISENSE
 //#define USE_SENSORS
-#define CHANGE_POWER
+//#define CHANGE_POWER
 #define CHANGE_CHANNEL
 #endif
 
@@ -57,11 +57,11 @@ typedef wiselib::GroupIterator<Os, Radio, semantics_t> IT_t;
 typedef wiselib::GroupCore<Os, Radio, CHD_t, JD_t, IT_t, nb_t, semantics_t> clustering_algo_t;
 
 //SE Quering
-#include "algorithms/routing/query/queryMsg.h"
-typedef wiselib::QueryMsg<Os, Radio> QueryMsg_t;
+//#include "algorithms/routing/query/queryMsg.h"
+//typedef wiselib::QueryMsg<Os, Radio> QueryMsg_t;
 
-#include "algorithms/routing/query/se_query_rounting.h"
-typedef wiselib::SeQueryRouting<Os, Radio, Os::Timer, semantics_t, nb_t> seQueryRouting_t;
+//#include "algorithms/routing/query/se_query_rounting.h"
+//typedef wiselib::SeQueryRouting<Os, Radio, Os::Timer, semantics_t, nb_t> seQueryRouting_t;
 
 //#include "algorithms/routing/query/se_query_flooding.h"
 //typedef wiselib::SeQueryFlooding<Os, Radio, Os::Timer, semantics_t, nb_t> seQueryRouting_t;
@@ -159,7 +159,8 @@ public:
         uart_->reg_read_callback<SemanticGroupsApp, &SemanticGroupsApp::handle_uart_msg > (this);
         uart_->enable_serial_comm();
 
-        timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (1000, this, 0);
+
+
 
 #ifdef ISENSE
         uint8_t echo_threshold = 190;
@@ -204,6 +205,10 @@ public:
         neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 16000, 180, 210);
         neighbor_discovery.register_debug_callback(nb_t::NEW_NB | nb_t::NEW_NB_BIDI | nb_t::DROPPED_NB | nb_t::LOST_NB_BIDI);
         neighbor_discovery.enable();
+        
+        timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (1000, this, 0);        
+//        timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (10000, this, (void *) 1);
+
     }
 
     //    void handle_sensor() {
@@ -235,7 +240,7 @@ public:
             // set the Iterator Module
             clustering_algo_.set_iterator(IT_);
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery, semantics_);
-            seQueryRouting_.init(*radio_, *timer_, *debug_, semantics_, neighbor_discovery);
+//            seQueryRouting_.init(*radio_, *timer_, *debug_, semantics_, neighbor_discovery);
 
             disabled_ = true;
 
@@ -308,42 +313,39 @@ public:
 #endif
 #endif
 #endif
-
-        timer_->set_timer<SemanticGroupsApp, &SemanticGroupsApp::start > (60000, this, (void *) 1);
-
     }
 
     void handle_uart_msg(uart_size_t len, Os::Uart::block_data_t *data) {
-        if (data[0] == 0x2) {
-            //if an enable message
-            if (!is_otap()) {
-                //initialize here as it is not possible in switch
-                QueryMsg_t test;
-                semantics_t::group_entry_t a;
-                if (data[1] == 0x1) {
-                    enable();
-                } else if (data[1] == 0x2) {
-                    disable();
-                } else if (data[1] == 0x6) {
-                    set_semantic((block_data_t*) data + 2, (block_data_t*) data + 6);
-                } else if (data[1] == 0x7) {
-
-                    test.set_msg_id(QueryMsg_t::SEROUTING);
-                    test.set_alg_id(QueryMsg_t::QUERY);
-                    test.set_sender(radio_->id());
-                    test.set_destination(0xffff);
-
-                    int ge[2] = {data[2], data[3]};
-                    semantics_t::group_entry_t a = semantics_t::group_entry_t((block_data_t*) ge);
-
-                    test.add_statement(a.data(), a.size());
-
-                    debug().debug("SQ;%x;%s", radio_->id(), a.c_str());
-                    seQueryRouting_.send(0xffff, test.length(), (uint8_t*) & test);
-
-                }
-            }
-        }
+//        if (data[0] == 0x2) {
+//            //if an enable message
+//            if (!is_otap()) {
+//                //initialize here as it is not possible in switch
+//                QueryMsg_t test;
+//                semantics_t::group_entry_t a;
+//                if (data[1] == 0x1) {
+//                    enable();
+//                } else if (data[1] == 0x2) {
+//                    disable();
+//                } else if (data[1] == 0x6) {
+//                    set_semantic((block_data_t*) data + 2, (block_data_t*) data + 6);
+//                } else if (data[1] == 0x7) {
+//
+//                    test.set_msg_id(QueryMsg_t::SEROUTING);
+//                    test.set_alg_id(QueryMsg_t::QUERY);
+//                    test.set_sender(radio_->id());
+//                    test.set_destination(0xffff);
+//
+//                    int ge[2] = {data[2], data[3]};
+//                    semantics_t::group_entry_t a = semantics_t::group_entry_t((block_data_t*) ge);
+//
+//                    test.add_statement(a.data(), a.size());
+//
+//                    debug().debug("SQ;%x;%s", radio_->id(), a.c_str());
+//                    seQueryRouting_.send(0xffff, test.length(), (uint8_t*) & test);
+//
+//                }
+//            }
+//        }
     }
 
 private:
@@ -352,7 +354,7 @@ private:
         if (disabled_) {
             debug().debug("ON");
             clustering_algo_.enable();
-            seQueryRouting_.enable_radio();
+//            seQueryRouting_.enable_radio();
             disabled_ = false;
         }
     }
@@ -395,7 +397,7 @@ private:
     IT_t IT_;
     // clustering algorithm core component
     clustering_algo_t clustering_algo_;
-    seQueryRouting_t seQueryRouting_;
+//    seQueryRouting_t seQueryRouting_;
     bool disabled_;
 
     semantics_t semantics_;
