@@ -2,14 +2,27 @@
  * Clustering Application
  */
 
+#ifdef ISENSE
+extern "C" { void assert(int) { } }
+#endif 
+
+#include "configuration.h"
+
+#include "external_interface/external_interface.h"
 #include "external_interface/external_interface_testing.h"
+
+#ifdef ECHO
 #include "algorithms/neighbor_discovery/echo.h"
+#define ECHO_ALG Echo
+#endif
+#ifdef ADAPTIVE
+#include "algorithms/neighbor_discovery/adaptive/adaptive_nd.h"
+#define ECHO_ALG AdaptiveND
+#endif
+
 #include "algorithms/cluster/clustering_types.h"
 
-#define CHANNEL 18
 
-// Replace the first Algorithm name with one from the list in comment
-#define LCA //FRONTS MOCA LCA
 #ifdef FRONTS
 #include "algorithms/cluster/fronts/fronts_core.h"
 #endif
@@ -22,15 +35,11 @@
 
 #include "controll_message.h"
 #include "report_message.h"
-
-#define ENABLE_UART_CL
-#define FAILURES_PERCENTAGE 0
-
+#include "external_interface/isense/isense_facet_provider.h"
 
 typedef wiselib::OSMODEL Os;
 
 
-//#define VIRTUAL_RADIO
 #ifdef VIRTUAL_RADIO
 #include "util/wisebed_node_api/virtual_extended_txradio.h"
 #include "util/base_classes/routing_base.h"
@@ -40,33 +49,36 @@ typedef wiselib::VirtualExtendedTxRadioModel<Os, Os::TxRadio, Os::Uart> Radio;
 typedef Os::TxRadio Radio;
 #endif
 
-typedef wiselib::Echo<Os, Radio, Os::Timer, Os::Debug> nb_t;
+#ifdef ECHO
+typedef wiselib::ECHO_ALG<Os, Radio, Os::Timer, Os::Debug> nb_t;
+#endif
+#ifdef ADAPTIVE
+typedef wiselib::ECHO_ALG<Os, Radio, Os::Timer, Os::Debug, Os::Rand, Os::DutyCycling> nb_t;
+#endif
+
 
 typedef Os::Radio::node_id_t node_id_t;
 typedef Os::Radio::block_data_t block_data_t;
 
 #ifdef FRONTS
-typedef wiselib::AtributeClusterHeadDecision<Os, Radio> CHD_t;
-typedef wiselib::BfsJoinDecision<Os, Radio> JD_t;
-typedef wiselib::FrontsIterator<Os, Radio> IT_t;
-typedef wiselib::FrontsCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
+typedef wiselib::AtributeClusterHeadDecision<Os, Radio> chd_t;
+typedef wiselib::FronstDecision<Os, Radio> jd_t;
+typedef wiselib::FrontsIterator<Os, Radio> it_t;
+typedef wiselib::FrontsCore<Os, Radio, chd_t, jd_t, it_t, nb_t> clustering_algo_t;
 #endif
 #ifdef MOCA
-typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> CHD_t;
-typedef wiselib::MocaJoinDecision<Os, Radio> JD_t;
-typedef wiselib::OverlappingIterator<Os, Radio> IT_t;
-typedef wiselib::MocaCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
+typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> chd_t;
+typedef wiselib::MocaJoinDecision<Os, Radio> jd_t;
+typedef wiselib::OverlappingIterator<Os, Radio> it_t;
+typedef wiselib::MocaCore<Os, Radio, chd_t, jd_t, it_t> clustering_algo_t;
 #endif
 #ifdef LCA
-typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> CHD_t;
-typedef wiselib::BfsJoinDecision<Os, Radio> JD_t;
-typedef wiselib::FrontsIterator<Os, Radio> IT_t;
-typedef wiselib::LcaCore<Os, Radio, CHD_t, JD_t, IT_t> clustering_algo_t;
+typedef wiselib::ProbabilisticClusterHeadDecision<Os, Radio> chd_t;
+typedef wiselib::BfsJoinDecision<Os, Radio> jd_t;
+typedef wiselib::FrontsIterator<Os, Radio> it_t;
+typedef wiselib::LcaCore<Os, Radio, chd_t, jd_t, it_t, nb_t> clustering_algo_t;
 #endif
 
-
-
-//#define REMOTE_DEBUG
 #ifdef REMOTE_DEBUG
 #include "util/pstl/map_static_vector.h"
 #include "algorithms/routing/flooding/flooding_algorithm.h"
@@ -85,8 +97,9 @@ typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
 class ClusteringFronts {
 public:
-    typedef Os::Uart::size_t uart_size_t;
-
+    #ifdef ENABLE_UART_CL
+    //typedef Os::Uart::size_t uart_size_t;
+#endif
     void init(Os::AppMainParameter& value) {
 
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
@@ -96,6 +109,8 @@ public:
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
 #endif
         rand_ = &wiselib::FacetProvider<Os, Os::Rand>::get_facet(value);
+        duty_ = &wiselib::FacetProvider<Os, Os::DutyCycling>::get_facet(value);
+
 
 
 #ifdef VIRTUAL_RADIO
@@ -131,7 +146,7 @@ public:
 
 #ifndef SHAWN
 #ifdef CHANGE_POWER
-        TxPower power;
+        Radio::TxPower power;
         power.set_dB(DB);
         radio_->set_power(power);
 #endif
@@ -144,7 +159,7 @@ public:
 
 #endif
         debug_->debug("*Boot%x*", radio_->id());
-        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, 0);
+        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (1000, this, 0);
     }
 
     // --------------------------------------------------------------------
@@ -159,13 +174,18 @@ public:
 
         if (a == 0) {
             disabled_ = false;
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 2000, 16000, 190, 210);
+#ifdef ECHO
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 16000, 200, 240);
+#endif
+#ifdef ADAPTIVE
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, *rand_, *duty_, 1000, 90);
+#endif
             // set the HeadDecision Module
-            clustering_algo_.set_cluster_head_decision(CHD_);
+            clustering_algo_.set_cluster_head_decision(chd_);
             // set the JoinDecision Module
-            clustering_algo_.set_join_decision(JD_);
+            clustering_algo_.set_join_decision(jd_);
             // set the Iterator Module
-            clustering_algo_.set_iterator(IT_);
+            clustering_algo_.set_iterator(it_);
             clustering_algo_.init(*radio_, *timer_, *debug_, *rand_, neighbor_discovery);
 
             clustering_algo_.set_maxhops(2);
@@ -173,15 +193,17 @@ public:
             clustering_algo_.set_probability(40);
 #endif
 #ifdef LCA
-            clustering_algo_.set_probability(20);
+            clustering_algo_.set_probability(10);
 #endif
 
             disabled_ = true;
 
-            if (!is_otap()) {
-                neighbor_discovery.register_debug_callback(0);
-                clustering_algo_.register_debug_callback();
-            }
+            //            if (!is_otap()) {
+            neighbor_discovery.register_debug_callback(0);
+            clustering_algo_.register_debug_callback();
+            //            }
+
+            enable();
 
         }
         timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, (void *) 1);
@@ -427,9 +449,9 @@ private:
 
     nb_t neighbor_discovery;
     // clustering algorithm modules
-    CHD_t CHD_;
-    JD_t JD_;
-    IT_t IT_;
+    chd_t chd_;
+    jd_t jd_;
+    it_t it_;
     // clustering algorithm core component
     clustering_algo_t clustering_algo_;
     bool disabled_;
@@ -442,6 +464,8 @@ private:
     Os::Uart::self_pointer_t uart_;
 #endif
     Os::Rand::self_pointer_t rand_;
+
+    Os::DutyCycling::self_pointer_t duty_;
 };
 // --------------------------------------------------------------------------
 wiselib::WiselibApplication<Os, ClusteringFronts> example_app;
