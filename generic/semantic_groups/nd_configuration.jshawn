@@ -26,9 +26,10 @@ if( seed > 0 ){
 shawn.runCommand("prepare_world","edge_model=" + em +
      " comm_model=" + cm +" range=" + range + " size_hint=" + range +
      " transm_model=reliable immediate_delivery=true");
-shawn.runCommand("rect_world", "width="+width+" height="+height+" count="+nodecount+" processors=" + procs);
+//shawn.runCommand("rect_world", "width="+width+" height="+height+" count="+nodecount+" processors=" + procs);
 
 //    shawn.runCommand("load_world"," file=../../shawn_topologies/fixdensity1/fix_density_00010_8.8_2.xml processors="+ procs);
+    shawn.runCommand("load_world"," file=/home/amaxilatis/repositories/wiseApps/javaApps/csv2xml/output.xml processors="+ procs);
 	 
 //Run the simulations
 shawn.runCommand("simulation", "max_iterations="+iterations);

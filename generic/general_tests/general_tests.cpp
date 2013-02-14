@@ -39,8 +39,8 @@ public:
     // --------------------------------------------------------------------
 
     void testDouble(void *) {
-        double a = rand()(100);
-        double b = rand()(100);
+        double a = 23.56;
+        double b = 13.29;
         double c = a / b;
 
         debug_->debug("calculating division of %f / %f = %f", a, b, c);
@@ -51,8 +51,8 @@ public:
     }
 
     void customTest(void *) {
-        float c_ = rand()(100), k_ = rand()(100);
-        float temp_k = 0.7 * c_ + 0.3 * k_;
+        double c_ = rand()(100), k_ = rand()(100);
+        double temp_k = 0.7 * c_ + 0.3 * k_;
 
         int int_k = (int) temp_k;
 
@@ -62,7 +62,7 @@ public:
         }
 
         k_ = (int) temp_k;
-        debug_->debug("ID:%x k=%d", radio_->id(), k_);
+        debug_->debug("ID:%x k=%f", radio_->id(), k_);
 
         timer_->set_timer<SemanticGroupsApp,
                 &SemanticGroupsApp::loopingTest > (1000, this, (void *) 0);

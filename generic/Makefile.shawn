@@ -2,7 +2,7 @@ all: shawn
 
 CXX = g++
 CXXFLAGS = -g -I. -I$(SHAWN_INCLUDE_DIR)/src -I$(SHAWN_INCLUDE_DIR)/buildfiles \
-	-I$(WISELIB_PATH_TESTING) -I$(WISELIB_PATH) \
+	-I$(WISELIB_PATH_TESTING) -I$(WISELIB_PATH) -I/home/amaxilatis/repositories/tuplestore/wiselib.testing \
 	-I/usr/local/lib -I/opt/local/lib \
 	-Wall -Wno-unknown-pragmas -Wno-sign-compare -DNDEBUG \
 	-DOSMODEL=ShawnOsModel -DSHAWN 
