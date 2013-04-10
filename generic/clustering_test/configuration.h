@@ -9,12 +9,12 @@
 
 // Replace the first Algorithm name with one from the list in comment
 //#define ECHO//ECHO ADAPTIVE
-#define ECHO //ECHO ADAPTIVE
+#define ADAPTIVE //ECHO ADAPTIVE
 // Replace the first Algorithm name with one from the list in comment
-#define LCA //FRONTS MOCA LCA
+#define FRONTS //FRONTS MOCA LCA
 
 //#define ENABLE_UART_CL
-#define FAILURES_PERCENTAGE 0
+#define FAILURES_PERCENTAGE 3 //*10%
 
 //#define VIRTUAL_RADIO
 //#define REMOTE_DEBUG

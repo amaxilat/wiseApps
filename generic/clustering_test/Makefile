@@ -2,6 +2,10 @@
 # Environment variable WISELIB_PATH needed
 # ----------------------------------------
 
+#export ISENSE_PATH=/home/amaxilatis/sdks/iSense_typical/
+export ISENSE_PATH=/home/amaxilatis/sdks/isense-tbaum
+#export ISENSE_PATH=/home/amaxilatis/sdks/isense_typical/
+
 
 all: clean isense
 # all: scw_msb

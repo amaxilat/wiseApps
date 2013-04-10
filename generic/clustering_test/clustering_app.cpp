@@ -3,7 +3,11 @@
  */
 
 #ifdef ISENSE
-extern "C" { void assert(int) { } }
+extern "C" {
+
+    void assert(int) {
+    }
+}
 #endif 
 
 #include "configuration.h"
@@ -97,9 +101,10 @@ typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
 class ClusteringFronts {
 public:
-    #ifdef ENABLE_UART_CL
+#ifdef ENABLE_UART_CL
     //typedef Os::Uart::size_t uart_size_t;
 #endif
+
     void init(Os::AppMainParameter& value) {
 
         timer_ = &wiselib::FacetProvider<Os, Os::Timer>::get_facet(value);
@@ -205,8 +210,12 @@ public:
 
             enable();
 
+        } else {
+            if (!fail()) {
+                recover();
+            }
         }
-        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (10000, this, (void *) 1);
+        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (60000, this, (void *) 1);
     }
 
 #ifdef ENABLE_UART_CL
@@ -408,24 +417,30 @@ private:
         }
     }
 
-    void fail() {
+    bool fail() {
         if (!disabled_) {
-            if ((*rand_)() % 100 < FAILURES_PERCENTAGE) {
+            if ((*rand_)() % 10 < FAILURES_PERCENTAGE) {
                 debug_->debug("Failing;%x", radio_->id());
                 neighbor_discovery.disable();
                 clustering_algo_.disable();
                 disabled_ = true;
+                return true;
             }
         }
+        return false;
     }
 
-    void recover() {
+    bool recover() {
         if (disabled_) {
-            debug_->debug("Recovering;%x", radio_->id());
-            neighbor_discovery.enable();
-            clustering_algo_.enable(20);
-            disabled_ = false;
+            if ((*rand_)() % 10 > FAILURES_PERCENTAGE) {
+                debug_->debug("Recovering;%x", radio_->id());
+                neighbor_discovery.enable();
+                clustering_algo_.enable(20);
+                disabled_ = false;
+                return true;
+            }
         }
+        return false;
     }
 
     void change_k(uint8_t k) {
