@@ -176,14 +176,15 @@ public:
     // --------------------------------------------------------------------
 
     void start(void * a) {
+        int b = (int) a;
 
-        if (a == 0) {
+        if (b == 0) {
             disabled_ = false;
 #ifdef ECHO
             neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 16000, 200, 240);
 #endif
 #ifdef ADAPTIVE
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, *rand_, *duty_, 1000, 90);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, *rand_, *duty_, 1000, 0);
 #endif
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(chd_);
@@ -209,13 +210,15 @@ public:
             //            }
 
             enable();
-
+            timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (5 * 60000, this, (void *) 1);
+        } else if (b == 1) {
+            fail();
+            timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (5 * 60000, this, (void *) 2);
         } else {
-            if (!fail()) {
-                recover();
-            }
+            debug_->debug("Deathnote2");
+            recover();
         }
-        timer_->set_timer<ClusteringFronts, &ClusteringFronts::start > (60000, this, (void *) 1);
+
     }
 
 #ifdef ENABLE_UART_CL
@@ -419,7 +422,9 @@ private:
 
     bool fail() {
         if (!disabled_) {
-            if ((*rand_)() % 10 < FAILURES_PERCENTAGE) {
+            int randnum = (*rand_)() % 10;
+            debug_->debug("Deathnote:%d", randnum);
+            if (randnum < FAILURES_PERCENTAGE) {
                 debug_->debug("Failing;%x", radio_->id());
                 neighbor_discovery.disable();
                 clustering_algo_.disable();
@@ -432,13 +437,13 @@ private:
 
     bool recover() {
         if (disabled_) {
-            if ((*rand_)() % 10 > FAILURES_PERCENTAGE) {
-                debug_->debug("Recovering;%x", radio_->id());
-                neighbor_discovery.enable();
-                clustering_algo_.enable(20);
-                disabled_ = false;
-                return true;
-            }
+            //            if ((*rand_)() % 10 > FAILURES_PERCENTAGE) {
+            debug_->debug("Recovering;%x", radio_->id());
+            neighbor_discovery.enable();
+            clustering_algo_.enable(20);
+            disabled_ = false;
+            return true;
+            //            }
         }
         return false;
     }

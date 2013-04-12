@@ -14,7 +14,7 @@
 #define FRONTS //FRONTS MOCA LCA
 
 //#define ENABLE_UART_CL
-#define FAILURES_PERCENTAGE 3 //*10%
+#define FAILURES_PERCENTAGE 1 //*10%
 
 //#define VIRTUAL_RADIO
 //#define REMOTE_DEBUG
