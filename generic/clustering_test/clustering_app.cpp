@@ -99,11 +99,28 @@ typedef wiselib::RemoteDebugModel<Os, Radio, routing_t, flooding_t, Os::Timer> r
 typedef wiselib::ControllMsg<Os, Radio> ControllMsg_t;
 typedef wiselib::ReportMsg<Os, Radio> ReportMsg_t;
 
-class ClusteringFronts {
+class ClusteringFronts : public isense::SleepHandler{
 public:
 #ifdef ENABLE_UART_CL
     //typedef Os::Uart::size_t uart_size_t;
 #endif
+    
+            /**
+         * Called before going to sleep.
+         * @return true if the node can go sleep.
+         */
+        bool stand_by() {
+            debug_->debug("Going to sleep");
+            return true;
+        }
+
+        /**
+         * Called when waking up.
+         * @param state previous state.
+         */
+        void wake_up(bool state) {
+            debug_->debug("waking up");
+        }
 
     void init(Os::AppMainParameter& value) {
 
@@ -114,9 +131,7 @@ public:
         uart_ = &wiselib::FacetProvider<Os, Os::Uart>::get_facet(value);
 #endif
         rand_ = &wiselib::FacetProvider<Os, Os::Rand>::get_facet(value);
-        duty_ = &wiselib::FacetProvider<Os, Os::DutyCycling>::get_facet(value);
-
-
+        duty_ = &wiselib::FacetProvider<Os, Os::DutyCycling>::get_facet(value);               
 
 #ifdef VIRTUAL_RADIO
         radio_ = &virtual_radio_;
@@ -184,8 +199,9 @@ public:
             neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, 1000, 16000, 200, 240);
 #endif
 #ifdef ADAPTIVE
-            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, *rand_, *duty_, 1000, 0);
+            neighbor_discovery.init(*radio_, *clock_, *timer_, *debug_, *rand_, *duty_, DUTY_PERIOD, DUTY_RATE);
 #endif
+#ifdef ENABLE_CLUSTERING
             // set the HeadDecision Module
             clustering_algo_.set_cluster_head_decision(chd_);
             // set the JoinDecision Module
@@ -201,12 +217,15 @@ public:
 #ifdef LCA
             clustering_algo_.set_probability(10);
 #endif
+#endif
 
             disabled_ = true;
 
             //            if (!is_otap()) {
             neighbor_discovery.register_debug_callback(0);
+#ifdef ENABLE_CLUSTERING
             clustering_algo_.register_debug_callback();
+#endif
             //            }
 
             enable();
@@ -318,6 +337,7 @@ public:
     }
 
     void clustering_events(int event) {
+#ifdef ENABLE_CLUSTERING
         if (is_otap()) {
             ReportMsg_t mess;
             mess.set_msg_id(ReportMsg_t::REPORT_MSG);
@@ -354,6 +374,7 @@ public:
                     return;
             }
         }
+#endif
     }
 
     void nd_callback(uint8_t event, node_id_t from, uint8_t len, uint8_t * data) {
@@ -406,7 +427,9 @@ private:
         if (disabled_) {
             debug_->debug("ON");
             neighbor_discovery.enable();
+#ifdef ENABLE_CLUSTERING
             clustering_algo_.enable(40);
+#endif
             disabled_ = false;
         }
     }
@@ -415,7 +438,9 @@ private:
         if (!disabled_) {
             debug_->debug("OFF");
             neighbor_discovery.disable();
+#ifdef ENABLE_CLUSTERING
             clustering_algo_.disable();
+#endif
             disabled_ = true;
         }
     }
@@ -427,7 +452,9 @@ private:
             if (randnum < FAILURES_PERCENTAGE) {
                 debug_->debug("Failing;%x", radio_->id());
                 neighbor_discovery.disable();
+#ifdef ENABLE_CLUSTERING
                 clustering_algo_.disable();
+#endif
                 disabled_ = true;
                 return true;
             }
@@ -440,7 +467,9 @@ private:
             //            if ((*rand_)() % 10 > FAILURES_PERCENTAGE) {
             debug_->debug("Recovering;%x", radio_->id());
             neighbor_discovery.enable();
+#ifdef ENABLE_CLUSTERING
             clustering_algo_.enable(20);
+#endif
             disabled_ = false;
             return true;
             //            }
@@ -450,7 +479,9 @@ private:
 
     void change_k(uint8_t k) {
         debug_->debug("ChangeK;%x;%d", radio_->id(), k);
+#ifdef ENABLE_CLUSTERING
         clustering_algo_.set_maxhops(k);
+#endif
     }
 
 #ifdef VIRTUAL_RADIO
@@ -468,12 +499,14 @@ private:
 #endif
 
     nb_t neighbor_discovery;
+#ifdef ENABLE_CLUSTERING
     // clustering algorithm modules
     chd_t chd_;
     jd_t jd_;
     it_t it_;
     // clustering algorithm core component
     clustering_algo_t clustering_algo_;
+#endif
     bool disabled_;
     bool clustering_enabled_;
 
