@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Maven: mksense:XbeeLib:1.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/XbeeLib-1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,26 @@
+	$TOPO_x_ceiling=100
+	$TOPO_y_ceiling=100
+	step=`expr $i`
+	echo "set xrange[0-1:"$TOPO_x_ceiling"+1]" > tmp/CON.p
+	echo "set yrange[0-1:"$TOPO_y_ceiling"+1]" >> tmp/CON.p
+	echo "set datafile separator \":\"" >> tmp/CON.p
+	echo "set size ratio 1" >> tmp/CON.p
+	echo "set xlabel \"x\"" >> tmp/CON.p
+	echo "set ylabel \"y\" rotate by 360" >> tmp/CON.p
+	echo "set title \"Connectivity graph\"" >> tmp/CON.p
+	echo "unset key" >> tmp/CON.p
+	echo "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 pi -1 ps 1" >> tmp/CON.p
+	echo "set pointintervalbox 2" >> tmp/CON.p
+	echo "tmp/tmp_BFS_"$step".txt"
+	echo "set label 1 \"connectedness : "$connectedness"\" at graph  0.70, graph  0.95" >> tmp/CON.p	
+		echo "set terminal png font '/usr/share/fonts/truetype/ttf-liberation/LiberationSans-Regular.ttf' 16 size 1280,1024" >> tmp/CON.p
+		echo "set output "\"""$nf"/CON_g"$i".png\"" >> tmp/CON.p
+		echo "plot \\"  >> tmp/CON.p
+		echo " 'tmp/tmp_COORD.txt' using 4:5 with points ls 1 lc rgb 'red', \\"  >> tmp/CON.p
+		for j in "tmp/tmp_CON_GRAPH_"$step""_*; do
+			echo " '"$j"' using 5:6 with linespoints ls 1, \\"  >> tmp/CON.p
+			echo $step":"$j
+		done
+		echo "-2" >> tmp/CON.p
+	gnuplot tmp/CON.p
+	rm tmp/CON.p
