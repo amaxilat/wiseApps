@@ -26,7 +26,7 @@ public class XbeeMessageLogger implements MessageListener {
     @Override
     public void receive(RxResponse16 rxResponse16) {
         int data = rxResponse16.getData()[0] * 256 + rxResponse16.getData()[1];
-        String mess = rxResponse16.getRemoteAddress().toString() + "\t" + data;
+        String mess = rxResponse16.getRemoteAddress().toString() + "\t" + data+"\t"+rxResponse16.getRssi();
 
         System.out.println(mess);
         try {
