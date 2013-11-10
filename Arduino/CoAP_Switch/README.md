@@ -9,13 +9,14 @@ Controlling actuators is possible via the LCD screen's LEFT and RIGHT buttons.
 
 ### Circuit
 
-+-------------+
-+ LCD  SHIELD +
-+-------------+
-+ Xbee SHIELD +
-+-------------+
-+   ARDUINO   +
-+-------------+
+
+    +-------------+
+    + LCD  SHIELD +
+    +-------------+
+    + Xbee SHIELD +
+    +-------------+
+    +   ARDUINO   +
+    +-------------+
 
 
 ### Libraries
