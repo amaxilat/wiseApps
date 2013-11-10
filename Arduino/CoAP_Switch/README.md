@@ -8,7 +8,15 @@ Controlling actuators is possible via the LCD screen's LEFT and RIGHT buttons.
 
 
 ### Circuit
-Switches Cirtuit
+
++-------------+
++ LCD  SHIELD +
++-------------+
++ Xbee SHIELD +
++-------------+
++   ARDUINO   +
++-------------+
+
 
 ### Libraries
 1. [Arduino-CoAP](https://github.com/dgiannakop/Arduino-CoAP)
