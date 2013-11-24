@@ -38,6 +38,9 @@ BaseRouting * routing;
 long blinkTime;
 //parentSensor* parent;
 
+unsigned long change;
+
+
 /**
  */
 void radio_callback(uint16_t sender, byte* payload, unsigned int length) {
@@ -96,6 +99,8 @@ void setup() {
 
   wdt_disable();
   wdt_enable(WDTO_8S);
+
+  change=millis();
 }
 
 void loop() {
@@ -103,6 +108,17 @@ void loop() {
   coap.handler();
   routing->loop();
   wdt_reset();
+
+  if (millis()-change>30000){
+    digitalWrite(8,rand()%1==0?HIGH:LOW);
+    digitalWrite(9,rand()%1==0?HIGH:LOW);
+    digitalWrite(10,rand()%1==0?HIGH:LOW);
+    change=millis();
+  }
 }
+
+
+
+
 
 
